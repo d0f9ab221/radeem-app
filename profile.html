@@ -2,10 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=dashboard.html">
-  <title>Redirecting...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Profile - Radeem App</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <p>Redirecting to <a href="dashboard.html">Dashboard</a>...</p>
+
+  <!-- Desktop Navbar -->
+  <nav class="navbar">
+    <a href="dashboard.html" class="nav-logo">
+      <span>🎁</span> Radeem App
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="profile.html" class="nav-link active">Profile</a>
+      <button id="logout-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+    </div>
+  </nav>
+
+  <div class="dashboard-container" style="margin-bottom: 6rem;">
+    <div class="profile-card">
+      <div class="profile-avatar" id="profile-avatar">U</div>
+      <h2 id="profile-username" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.25rem;">Loading...</h2>
+      <p id="profile-email" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">loading...</p>
+
+      <div style="display: flex; justify-content: space-around; background: #f8fafc; padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; border: 1px solid var(--border);">
+        <div>
+          <div style="font-size: 1.5rem;">🪙</div>
+          <div style="font-weight: 800; font-size: 1.3rem; color: var(--text-main);" id="profile-coins">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Coins</div>
+        </div>
+        <div style="width: 1px; background: var(--border);"></div>
+        <div>
+          <div style="font-size: 1.5rem;">💎</div>
+          <div style="font-weight: 800; font-size: 1.3rem; color: var(--text-main);" id="profile-diamonds">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Diamonds</div>
+        </div>
+      </div>
+
+      <div class="redeem-history">
+        <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span>🎟️</span> Redeem History</h3>
+        <div id="history-list">
+          <p style="color: var(--text-muted); text-align: center; padding: 2rem 0; font-size: 0.9rem;">No redeemed codes yet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="dashboard.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⚡</span>
+      <span class="bottom-nav-label">Earn</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">👤</span>
+      <span class="bottom-nav-label">Profile</span>
+    </a>
+    <a href="#" id="mobile-logout-btn" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🚪</span>
+      <span class="bottom-nav-label">Logout</span>
+    </a>
+  </div>
+
+  <script type="module">
+    import { checkAuthState, logoutUser } from './auth.js';
+    import { getUserData } from './database.js';
+
+    const logoutBtn = document.getElementById('logout-btn');
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profileUsername = document.getElementById('profile-username');
+    const profileEmail = document.getElementById('profile-email');
+    const profileCoins = document.getElementById('profile-coins');
+    const profileDiamonds = document.getElementById('profile-diamonds');
+    const historyList = document.getElementById('history-list');
+
+    checkAuthState(async (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+      } else {
+        const data = await getUserData(user.uid);
+        if (data) {
+          profileUsername.textContent = data.username || 'User';
+          profileEmail.textContent = data.email;
+          profileCoins.textContent = data.coins || 0;
+          profileDiamonds.textContent = data.diamonds || 0;
+          profileAvatar.textContent = (data.username || 'U').charAt(0).toUpperCase();
+
+          // Load History
+          if (data.redeemedCodes) {
+            historyList.innerHTML = '';
+            Object.values(data.redeemedCodes).reverse().forEach(item => {
+              const div = document.createElement('div');
+              div.className = 'history-item';
+              div.innerHTML = `
+                <div>
+                  <div style="font-weight: 700; font-size: 0.95rem;">${item.amount} Code</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(item.date).toLocaleDateString()}</div>
+                </div>
+                <div class="code-display">${item.code}</div>
+              `;
+              historyList.appendChild(div); 
+            });
+          }
+        }
+      }
+    });
+
+    async function handleLogout() {
+      await logoutUser();
+      window.location.href = 'index.html';
+    }
+    logoutBtn.addEventListener('click', handleLogout);
+    mobileLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+  </script>
 </body>
 </html>

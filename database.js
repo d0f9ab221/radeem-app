@@ -2,7 +2,6 @@ import { db, isFirebaseAvailable } from './firebase.js';
 import { ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { safeStorage } from './auth.js';
 
-// Local simulation database stored in safeStorage
 const SIM_DB_KEY = 'radeem_simulated_db';
 function getSimulatedDB() {
   try {
@@ -28,6 +27,7 @@ export async function createUserProfile(uid, email, username) {
         email: email,
         coins: 0,
         diamonds: 0,
+        lastDailyClaim: 0,
         createdAt: new Date().toISOString(),
         redeemedCodes: {}
       };
@@ -45,6 +45,7 @@ export async function createUserProfile(uid, email, username) {
         email: email,
         coins: 0,
         diamonds: 0,
+        lastDailyClaim: 0,
         createdAt: new Date().toISOString()
       });
     }
@@ -88,6 +89,26 @@ export async function updateUserCurrency(uid, coins, diamonds) {
     });
   } catch (error) {
     console.error("Error updating user currency:", error);
+  }
+}
+
+export async function updateLastDailyClaim(uid, timestamp) {
+  if (!isFirebaseAvailable) {
+    const simDB = getSimulatedDB();
+    if (simDB[uid]) {
+      simDB[uid].lastDailyClaim = timestamp;
+      saveSimulatedDB(simDB);
+    }
+    return;
+  }
+
+  try {
+    const userRef = ref(db, `users/${uid}`);
+    await update(userRef, {
+      lastDailyClaim: timestamp
+    });
+  } catch (error) {
+    console.error("Error updating daily claim time:", error);
   }
 }
 
