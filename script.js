@@ -60,11 +60,12 @@ function initFirebase() {
             if (firebase.apps.length === 0) {
                 firebase.initializeApp(firebaseConfig);
             }
-            db = firebase.firestore();
+            // Switched to Realtime Database
+            db = firebase.database();
             auth = firebase.auth();
             isFirebaseActive = true;
-            console.log("Firebase successfully initialized with live server!");
-        } catch (error) { 
+            console.log("Firebase Realtime Database successfully initialized!");
+        } catch (error) {
             console.error("Firebase initialization error:", error);
             showToast("⚠️ Firebase config error. Running in Demo Mode.");
             isFirebaseActive = false;
@@ -107,7 +108,7 @@ function init() {
         auth.onAuthStateChanged(user => {
             if (user) {
                 handleUserLogin(user);
-            } else { 
+            } else {
                 handleUserLogout();
             }
         });
@@ -132,18 +133,18 @@ function handleUserLogin(user) {
         displayName: user.displayName || "Radeemer",
         photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style"
     };
-    state.loaded = false; // Reset loaded state until Firestore returns data
+    state.loaded = false; // Reset loaded state until Realtime Database returns data
 
-    // Sync with Firestore in real-time
-    const userRef = db.collection('users').doc(user.uid);
-    userRef.onSnapshot(doc => {
-        if (doc.exists) {
-            const data = doc.data();
+    // Sync with Realtime Database in real-time
+    const userRef = db.ref('users/' + user.uid);
+    userRef.on('value', snapshot => {
+        const data = snapshot.val();
+        if (data) {
             state.coins = data.coins ?? 0;
             state.diamonds = data.diamonds ?? 19;
             state.history = data.history ?? [];
         } else {
-            // Create new user document on server if it doesn't exist
+            // Create new user document on Realtime Database if it doesn't exist
             userRef.set({
                 coins: 0,
                 diamonds: 19,
@@ -157,8 +158,8 @@ function handleUserLogin(user) {
         updateUI();
         renderHistory();
     }, error => {
-        console.error("Firestore sync error:", error);
-        showToast("⚠️ Firestore permission error. Check your Security Rules!");
+        console.error("Realtime Database sync error:", error);
+        showToast("⚠️ Database permission error. Check your Security Rules!");
     });
 
     showApp();
@@ -342,7 +343,7 @@ function tryOpenBox() {
             rewardPopup.classList.remove('show');
             boxHint.textContent = "Touch the box to unlock rewards!";
             isOpening = false;
-        }, 3000);
+        }, 3000); 
 
     }, 600);
 }
@@ -406,17 +407,17 @@ function redeemCode(provider, cost) {
     showToast("🎟️ Code Redeemed! Check History tab.");
 }
 
-// Helper: Save state to Firestore or LocalStorage
+// Helper: Save state to Realtime Database or LocalStorage
 function saveStateToServerOrLocal() {
     if (isFirebaseActive && state.user) {
         // Only update if state is fully loaded to prevent overwriting with defaults
         if (state.loaded) {
-            db.collection('users').doc(state.user.uid).update({
+            db.ref('users/' + state.user.uid).update({
                 coins: state.coins,
                 diamonds: state.diamonds,
                 history: state.history
             }).catch(err => {
-                console.error("Error updating server state:", err);
+                console.error("Error updating database state:", err);
                 showToast("⚠️ Server sync failed. Check connection.");
             });
         }
