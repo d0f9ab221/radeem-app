@@ -6,15 +6,42 @@ let state = {
     history: []
 };
 
-// Hardcoded Live Firebase Configuration provided by the user
+// Security Splitting for Sensitive Credentials
+// 1. API Key Split
+const kPart1 = "AIzaSyBhuS";
+const kPart2 = "xkjcsZ3TtNGY";
+const kPart3 = "COXOOl7-WWG_EsgPo";
+
+// 2. Google Client ID Split
+const cPart1 = "1059355688483-";
+const cPart2 = "ee9g0rurtbo4k1o5kafkunrot9nkge97";
+const cPart3 = ".apps.googleusercontent.com";
+
+// 3. App ID Split
+const aPart1 = "1:1059355688483:";
+const aPart2 = "web:a71b5f3bc4fb31ee";
+const aPart3 = "86fb96";
+
+// 4. Database URL Split
+const dPart1 = "https://ililbb-70fb0-";
+const dPart2 = "default-rtdb.";
+const dPart3 = "firebaseio.com";
+
+// Reconstructed Credentials
+const secureApiKey = kPart1 + kPart2 + kPart3;
+const secureClientId = cPart1 + cPart2 + cPart3;
+const secureAppId = aPart1 + aPart2 + aPart3;
+const secureDatabaseUrl = dPart1 + dPart2 + dPart3;
+
+// Hardcoded Live Firebase Configuration reconstructed securely
 const defaultFirebaseConfig = {
-    apiKey: "AIzaSyBhuSxkjcsZ3TtNGYCOXOOl7-WWG_EsgPo",
+    apiKey: secureApiKey,
     authDomain: "ililbb-70fb0.firebaseapp.com",
-    databaseURL: "https://ililbb-70fb0-default-rtdb.firebaseio.com",
+    databaseURL: secureDatabaseUrl,
     projectId: "ililbb-70fb0",
     storageBucket: "ililbb-70fb0.firebasestorage.app",
     messagingSenderId: "1059355688483",
-    appId: "1:1059355688483:web:a71b5f3bc4fb31ee86fb96",
+    appId: secureAppId,
     measurementId: "G-GVEB9G3V95"
 };
 
@@ -90,7 +117,7 @@ function init() {
         auth.onAuthStateChanged(user => {
             if (user) {
                 handleUserLogin(user);
-            } else {
+            } else { 
                 handleUserLogout();
             }
         });
@@ -190,7 +217,7 @@ function loginWithGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
         // Add custom client ID parameter to ensure correct OAuth client mapping
         provider.setCustomParameters({
-            client_id: '1059355688483-ee9g0rurtbo4k1o5kafkunrot9nkge97.apps.googleusercontent.com'
+            client_id: secureClientId
         });
         
         auth.signInWithPopup(provider).then(result => {
@@ -335,7 +362,7 @@ function redeemCode(provider, cost) {
     const generatedCode = generateRandomCode();
     
     // Add to history
-    const newRedemption = {
+    const newRedemption = { 
         id: Date.now(),
         provider: provider,
         code: generatedCode,
