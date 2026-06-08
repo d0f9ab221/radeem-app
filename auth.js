@@ -1,75 +1,91 @@
-// Email/Password Register
-async function signUpWithEmail(email, password, username) {
-    try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        // Create user profile in Realtime Database
-        await firebase.database().ref(`users/${user.uid}`).set({
-            username: username,
-            email: email,
-            coins: 0,
-            diamonds: 0,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        });
-        
-        window.location.href = 'dashboard.html';
-    } catch (error) {
-        throw error;
+// Authentication Helper Functions
+
+// Check if user is logged in and redirect if necessary
+function checkAuthState(requireAuth, redirectUrl) {
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      if (!requireAuth) {
+        window.location.href = redirectUrl;
+      }
+    } else {
+      if (requireAuth) {
+        window.location.href = redirectUrl;
+      }
     }
+  });
 }
 
-// Email/Password Login
-async function signInWithEmail(email, password) {
-    try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
-        window.location.href = 'dashboard.html';
-    } catch (error) {
-        throw error;
-    }
+// Register with Email and Password
+async function registerWithEmail(email, password, username) {
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    
+    // Create user profile in Realtime Database
+    await db.ref('users/' + user.uid).set({
+      username: username,
+      email: email,
+      coins: 0,
+      diamonds: 0,
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    });
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 }
 
-// Google Sign-In
+// Login with Email and Password
+async function loginWithEmail(email, password) {
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+// Sign In with Google
 async function signInWithGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-        const result = await firebase.auth().signInWithPopup(provider);
-        const user = result.user;
-        
-        // Check if user already exists in database
-        const snapshot = await firebase.database().ref(`users/${user.uid}`).once('value');
-        if (!snapshot.exists()) {
-            // Create profile for new Google user
-            await firebase.database().ref(`users/${user.uid}`).set({
-                username: user.displayName || 'Google User',
-                email: user.email,
-                coins: 0,
-                diamonds: 0,
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            });
-        }
-        
-        window.location.href = 'dashboard.html';
-    } catch (error) {
-        throw error;
+  try {
+    const result = await auth.signInWithPopup(googleProvider);
+    const user = result.user;
+    
+    // Check if user already exists in database
+    const snapshot = await db.ref('users/' + user.uid).once('value');
+    if (!snapshot.exists()) {
+      // Create profile for new Google user
+      await db.ref('users/' + user.uid).set({
+        username: user.displayName || 'User_' + Math.random().toString(36).substring(2, 7),
+        email: user.email,
+        coins: 0,
+        diamonds: 0,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
     }
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 }
 
-// Password Reset
-async function resetPassword(email) {
-    try {
-        await firebase.auth().sendPasswordResetEmail(email);
-    } catch (error) {
-        throw error;
-    }
+// Send Password Reset Email
+async function sendPasswordReset(email) {
+  try {
+    await auth.sendPasswordResetEmail(email);
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 }
 
-// Logout
+// Logout User
 async function logoutUser() {
-    try {
-        await firebase.auth().signOut();
-        window.location.href = 'login.html';
-    } catch (error) {
-        console.error("Logout Error:", error);
-    }
+  try {
+    await auth.signOut();
+    window.location.href = 'login.html';
+  } catch (error) {
+    console.error("Logout Error:", error);
+  }
 }

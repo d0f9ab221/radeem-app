@@ -1,182 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redeem - Radeem App</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redeem - Radeem App</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22 width=%22100%22 height=%22100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%234F46E5%22/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="app-body">
-    <!-- Top Header -->
+<body>
+  <div class="app-container">
+    <!-- Header -->
     <header class="app-header">
-        <div class="header-title-only">
-            <h2>Redeem Rewards</h2>
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+        <span class="logo-text">Radeem</span>
+      </div>
+      <div class="balance-group">
+        <div class="balance-badge coins">
+          <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="8"></circle>
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+          <span class="user-coins-value">0</span>
         </div>
-        <div class="balances-container">
-            <div class="balance-pill coin-pill">
-                <span class="pill-icon">🪙</span>
-                <span id="header-coins">0</span>
-            </div>
-        </div>
+      </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="app-content">
-        <div class="redeem-hero">
-            <img src="https://image.pollinations.ai/prompt/3d%20rupee%20symbol%20with%20glowing%20gift%20cards%20and%20cash" alt="Redeem">
-            <h2>Convert Coins to Cash</h2>
-            <p>900 Coins = 10 Rupees Redeem Code</p>
+    <!-- Main Content -->
+    <main class="content-area">
+      <h3 class="section-title">Redeem Rewards</h3>
+      
+      <div class="redeem-card">
+        <div class="redeem-option">
+          <div class="redeem-details">
+            <span class="redeem-title">₹10 Google Play Code</span>
+            <span class="redeem-cost">Cost: 900 Coins</span>
+          </div>
+          <svg style="width: 32px; height: 32px; color: var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+          </svg>
         </div>
+        
+        <button id="redeem-btn" onclick="processRedeem()" class="btn-primary">
+          Redeem Now
+        </button>
+      </div>
 
-        <div id="redeem-alert" class="alert hidden"></div>
-
-        <!-- Redeem Form -->
-        <div class="redeem-card">
-            <h3>Request Redeem Code</h3>
-            <form id="redeem-form">
-                <div class="form-group">
-                    <label for="payment-details">UPI ID / Paytm Number / Email</label>
-                    <input type="text" id="payment-details" placeholder="Enter details to receive code" required>
-                </div>
-                <button type="submit" id="btn-submit-redeem" class="btn btn-primary btn-block">
-                    Redeem 10 Rupees (900 Coins)
-                </button>
-            </form>
+      <!-- Redeem History -->
+      <div class="redeem-history-section">
+        <h3 class="section-title">Redeem History</h3>
+        <div id="redeem-history-list">
+          <!-- Loaded dynamically from Firebase -->
+          <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+            Loading history...
+          </div>
         </div>
-
-        <!-- Redeem History -->
-        <div class="history-section">
-            <h3>Redeem History</h3>
-            <div class="history-list" id="history-list">
-                <div class="empty-history">No redeem requests yet.</div>
-            </div>
-        </div>
+      </div>
     </main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation -->
     <nav class="bottom-nav">
-        <button class="nav-item" onclick="window.location.href='dashboard.html'">
-            <i data-lucide="home"></i>
-            <span>Home</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=earn'">
-            <i data-lucide="tv"></i>
-            <span>Earn</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=box'">
-            <i data-lucide="gift"></i>
-            <span>Box</span>
-        </button>
-        <button class="nav-item active">
-            <i data-lucide="award"></i>
-            <span>Redeem</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='profile.html'">
-            <i data-lucide="user"></i>
-            <span>Profile</span>
-        </button>
+      <a href="dashboard.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="dashboard.html#earn" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+        <span>Earn</span>
+      </a>
+      <a href="dashboard.html#box" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+          <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+        </svg>
+        <span>Box</span>
+      </a>
+      <a href="redeem.html" class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+        </svg>
+        <span>Redeem</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
     </nav>
+  </div>
 
-    <script src="firebase.js"></script>
-    <script src="database.js"></script>
-    <script>
-        lucide.createIcons();
-
-        let userCoins = 0;
-
-        // Sync user balance
-        firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            syncUserData(user.uid, (data) => {
-                if (data) {
-                    userCoins = data.coins || 0;
-                    document.getElementById('header-coins').innerText = userCoins;
-                }
-            });
-
-            // Load Redeem History
-            loadRedeemHistory(user.uid);
-        });
-
-        // Handle Redeem Form Submission
-        document.getElementById('redeem-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const details = document.getElementById('payment-details').value;
-            const btn = document.getElementById('btn-submit-redeem');
-            const alertBox = document.getElementById('redeem-alert');
-
-            if (userCoins < 900) {
-                showAlert('Insufficient coins! You need at least 900 coins.', 'error');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = 'Processing...';
-
-            try {
-                const user = firebase.auth().currentUser;
-                await createRedeemRequest(user.uid, user.email, details);
-                showAlert('Redeem request submitted successfully!', 'success');
-                document.getElementById('payment-details').value = '';
-            } catch (error) {
-                showAlert(error.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Redeem 10 Rupees (900 Coins)';
-            }
-        });
-
-        function showAlert(msg, type) {
-            const alertBox = document.getElementById('redeem-alert');
-            alertBox.innerText = msg;
-            alertBox.className = `alert ${type}`;
-            alertBox.classList.remove('hidden');
-            setTimeout(() => alertBox.classList.add('hidden'), 4000);
-        }
-
-        function loadRedeemHistory(uid) {
-            const historyList = document.getElementById('history-list');
-            firebase.database().ref('redeemRequests').orderByChild('uid').equalTo(uid)
-                .on('value', (snapshot) => {
-                    if (!snapshot.exists()) {
-                        historyList.innerHTML = '<div class="empty-history">No redeem requests yet.</div>';
-                        return;
-                    }
-
-                    let html = '';
-                    const data = snapshot.val();
-                    // Sort by date descending
-                    const sortedKeys = Object.keys(data).sort((a, b) => data[b].createdAt - data[a].createdAt);
-                    
-                    sortedKeys.forEach(key => {
-                        const req = data[key];
-                        const date = new Date(req.createdAt).toLocaleDateString();
-                        const statusClass = req.status === 'pending' ? 'status-pending' : 'status-approved';
-                        html += `
-                            <div class="history-item">
-                                <div class="history-info">
-                                    <span class="history-amount">₹${req.amount} Redeem Code</span>
-                                    <span class="history-date">${date} • Used ${req.coinsUsed} Coins</span>
-                                </div>
-                                <span class="status-badge ${statusClass}">${req.status.toUpperCase()}</span>
-                            </div>
-                        `;
-                    });
-                    historyList.innerHTML = html;
-                });
-        }
-    </script>
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
+  <script src="database.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

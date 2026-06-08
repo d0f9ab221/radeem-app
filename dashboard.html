@@ -1,196 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Radeem App</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Radeem App</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22 width=%22100%22 height=%22100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%234F46E5%22/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="app-body">
-    <!-- Top Header -->
+<body>
+  <div class="app-container">
+    <!-- Header -->
     <header class="app-header">
-        <div class="user-profile-summary">
-            <img id="user-avatar" src="https://image.pollinations.ai/prompt/minimalist%20cute%203d%20avatar%20boy%20smiling" alt="Avatar" class="header-avatar">
-            <div>
-                <h4 id="user-greeting">Hello, User</h4>
-                <p class="level-badge">Bronze Member</p>
-            </div>
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+        <span class="logo-text">Radeem</span>
+      </div>
+      <div class="balance-group">
+        <div class="balance-badge coins">
+          <!-- Coin SVG -->
+          <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="8"></circle>
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+          <span class="user-coins-value">0</span>
         </div>
-        <div class="balances-container">
-            <div class="balance-pill coin-pill">
-                <span class="pill-icon">🪙</span>
-                <span id="header-coins">0</span>
-            </div>
-            <div class="balance-pill diamond-pill">
-                <span class="pill-icon">💎</span>
-                <span id="header-diamonds">0</span>
-            </div>
+        <div class="balance-badge diamonds">
+          <!-- Diamond SVG -->
+          <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 12L12 4L18 12L12 20L6 12Z"></path>
+          </svg>
+          <span class="user-diamonds-value">0</span>
         </div>
+      </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="app-content">
-        <!-- TAB 1: HOME -->
-        <section id="tab-home" class="tab-content active">
-            <div class="welcome-banner">
-                <div class="banner-text">
-                    <h3>Earn Daily Rewards!</h3>
-                    <p>Watch ads, open mystery boxes, and redeem real cash instantly.</p>
-                </div>
-                <div class="banner-img">
-                    <img src="https://image.pollinations.ai/prompt/3d%20gold%20coins%20and%20diamonds%20flying%20out%20of%20a%20gift%20box" alt="Rewards">
-                </div>
-            </div>
+    <!-- Main Content -->
+    <main class="content-area">
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <div class="welcome-title">Hello, <span id="dashboard-username">User</span>!</div>
+        <div class="welcome-subtitle">Ready to claim your rewards today?</div>
+        <div class="progress-container">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">0% to Next Redeem</div>
+      </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">🪙</div>
-                    <div class="stat-info">
-                        <span class="stat-val" id="stats-coins">0</span>
-                        <span class="stat-label">Total Coins</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">💎</div>
-                    <div class="stat-info">
-                        <span class="stat-val" id="stats-diamonds">0</span>
-                        <span class="stat-label">Total Diamonds</span>
-                    </div>
-                </div>
-            </div>
+      <!-- Quick Actions -->
+      <h3 class="section-title">Quick Actions</h3>
+      <div class="action-grid">
+        <div class="action-card earn" onclick="window.location.href='dashboard.html#earn'">
+          <div class="action-icon-wrapper">
+            <svg style="width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="23 7 16 12 23 17 23 7"></polygon>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </div>
+          <div class="action-card-title">Watch Ads</div>
+          <div class="action-card-desc">Earn Diamonds</div>
+        </div>
 
-            <div class="section-title">
-                <h3>Daily Progress</h3>
-            </div>
-            <div class="progress-card">
-                <div class="progress-info">
-                    <span>Daily Goal</span>
-                    <span id="progress-text">0/10 Ads Watched</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
-                </div>
-            </div>
-        </section>
+        <div class="action-card box" onclick="window.location.href='dashboard.html#box'">
+          <div class="action-icon-wrapper">
+            <svg style="width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+            </svg>
+          </div>
+          <div class="action-card-title">Mystery Box</div>
+          <div class="action-card-desc">Win Big Coins</div>
+        </div>
+      </div>
 
-        <!-- TAB 2: EARN (WATCH ADS) -->
-        <section id="tab-earn" class="tab-content">
-            <div class="earn-hero">
-                <img src="https://image.pollinations.ai/prompt/3d%20play%20button%20with%20neon%20glowing%20diamonds%20around%20it" alt="Earn">
-                <h2>Watch Ads & Earn</h2>
-                <p>Get 1 Diamond instantly for every video ad you watch. No limits!</p>
-            </div>
+      <!-- Dynamic Tab Views (Earn / Mystery Box) -->
+      <div id="earn-section" class="tab-section hidden">
+        <h3 class="section-title">Watch Video Ads</h3>
+        <div class="ad-card">
+          <div class="ad-illustration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 100%; height: 100%;">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+              <line x1="7" y1="2" x2="7" y2="22"></line>
+              <line x1="17" y1="2" x2="17" y2="22"></line>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <line x1="2" y1="7" x2="7" y2="7"></line>
+              <line x1="2" y1="17" x2="7" y2="17"></line>
+              <line x1="17" y1="17" x2="22" y2="17"></line>
+              <line x1="17" y1="7" x2="22" y2="7"></line>
+            </svg>
+          </div>
+          <p style="font-weight: 700; margin-bottom: 8px;">Watch 1 Video Ad = Get 1 Diamond</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Diamonds are used to open premium Mystery Boxes!</p>
+          <button id="watch-ad-btn" onclick="watchAd()" class="btn-primary">
+            <svg class="btn-icon" style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Watch Video Ad
+          </button>
+        </div>
+      </div>
 
-            <div class="ad-action-card">
-                <button id="btn-watch-ad" class="btn btn-primary btn-lg btn-block">
-                    <i data-lucide="play-circle"></i> Watch Video Ad
-                </button>
-                <p class="ad-disclaimer">Please watch the entire ad to claim your reward.</p>
+      <div id="box-section" class="tab-section hidden">
+        <h3 class="section-title">Premium Mystery Box</h3>
+        <div class="mystery-box-section">
+          <div class="mystery-box-container" id="mystery-box-container" onclick="openMysteryBox()">
+            <div class="box-glow"></div>
+            <!-- Pure SVG 3D-like Mystery Box -->
+            <svg class="box-svg" viewBox="0 0 100 100">
+              <!-- Box Lid -->
+              <g class="box-lid">
+                <path d="M15,35 L50,20 L85,35 L50,50 Z" fill="#4F46E5" stroke="#312E81" stroke-width="2"/>
+                <path d="M15,35 L15,42 L50,57 L50,50 Z" fill="#4338CA" stroke="#312E81" stroke-width="2"/>
+                <path d="M85,35 L85,42 L50,57 L50,50 Z" fill="#3730A3" stroke="#312E81" stroke-width="2"/>
+              </g>
+              <!-- Box Body -->
+              <g class="box-body">
+                <path d="M18,45 L50,60 L82,45 L82,80 L50,95 L18,80 Z" fill="#4F46E5" stroke="#312E81" stroke-width="2"/>
+                <path d="M18,45 L50,60 L50,95 L18,80 Z" fill="#4338CA" stroke="#312E81" stroke-width="2"/>
+                <path d="M82,45 L50,60 L50,95 L82,80 Z" fill="#3730A3" stroke="#312E81" stroke-width="2"/>
+                <!-- Question Mark Graphic -->
+                <text x="50" y="75" font-family="Poppins" font-size="22" font-weight="800" fill="#F59E0B" text-anchor="middle">?</text>
+              </g>
+            </svg>
+            <!-- Reward Reveal Element -->
+            <div class="box-reward-reveal" id="box-reward-reveal">
+              <svg class="reward-coin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="8" fill="#F59E0B" stroke="#D97706"></circle>
+                <text x="12" y="16" font-family="Poppins" font-size="12" font-weight="800" fill="white" text-anchor="middle">C</text>
+              </svg>
+              <span style="font-weight: 800; color: var(--accent); font-size: 1.4rem; margin-top: 10px;">+190 Coins</span>
             </div>
-        </section>
-
-        <!-- TAB 3: MYSTERY BOX -->
-        <section id="tab-box" class="tab-content">
-            <div class="box-hero">
-                <h2>Premium Mystery Box</h2>
-                <p>Spend <strong class="highlight">19 Diamonds</strong> to win <strong class="highlight">190 Coins</strong> instantly!</p>
-            </div>
-
-            <!-- Interactive 3D-like Mystery Box Container -->
-            <div class="mystery-box-container">
-                <div class="glow-effect"></div>
-                <div class="particles-container" id="particles"></div>
-                <div class="mystery-box" id="mystery-box">
-                    <div class="box-lid"></div>
-                    <div class="box-body-3d"></div>
-                </div>
-                <div class="reward-reveal hidden" id="reward-reveal">
-                    <div class="reveal-glow"></div>
-                    <div class="reveal-content">
-                        <span class="reveal-icon">🪙</span>
-                        <h3>+190 Coins</h3>
-                        <p>Added to your balance!</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="box-action-container">
-                <button id="btn-open-box" class="btn btn-accent btn-lg btn-block">
-                    <i data-lucide="gift"></i> Open Box (19 💎)
-                </button>
-                <p class="box-balance-warning" id="box-warning"></p>
-            </div>
-        </section>
+          </div>
+          <p id="box-status-text" style="font-weight: 700; margin-bottom: 4px;">Tap to Open!</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Cost: 19 Diamonds | Reward: 190 Coins</p>
+          <button id="open-box-btn" onclick="openMysteryBox()" class="btn-primary" style="background: var(--accent); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2);">
+            Open Box (19 💎)
+          </button>
+        </div>
+      </div>
     </main>
 
-    <!-- Simulated Video Ad Modal -->
-    <div class="ad-modal hidden" id="ad-modal">
-        <div class="ad-modal-content">
-            <div class="ad-header">
-                <span class="ad-badge">Sponsored Ad</span>
-                <span class="ad-timer" id="ad-timer">15s</span>
-            </div>
-            <div class="ad-video-placeholder">
-                <div class="ad-spinner"></div>
-                <p>Loading Premium Video Ad...</p>
-                <div class="simulated-video-content">
-                    <img src="https://image.pollinations.ai/prompt/cinematic%203d%20mobile%20game%20action%20scene%20with%20dragons%20and%20gold" alt="Ad Video">
-                </div>
-            </div>
-            <div class="ad-footer-bar">
-                <div class="ad-progress-bar" id="ad-progress"></div>
-            </div>
+    <!-- Ad Simulation Modal -->
+    <div class="ad-modal" id="ad-modal">
+      <div class="ad-video-placeholder">
+        <div class="ad-timer-badge">Ad ends in: <span id="ad-countdown">5</span>s</div>
+        <svg style="width: 50px; height: 50px; color: white; margin-bottom: 10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+        <span style="font-weight: 600; font-size: 0.9rem;">Simulated Video Ad Playing...</span>
+        <div class="ad-progress-container">
+          <div class="ad-progress-bar" id="ad-progress-bar"></div>
         </div>
+      </div>
     </div>
 
-    <!-- Reward Splash Animation Overlay -->
-    <div class="reward-splash hidden" id="reward-splash">
-        <div class="splash-card">
-            <div class="splash-icon">💎</div>
-            <h2>+1 Diamond</h2>
-            <p>Reward claimed successfully!</p>
-            <button class="btn btn-primary" onclick="closeSplash()">Awesome!</button>
-        </div>
+    <!-- Reward Animation Overlay -->
+    <div class="reward-animation" id="reward-animation">
+      <svg class="reward-diamond-burst" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 12L12 4L18 12L12 20L6 12Z" fill="#10B981"></path>
+      </svg>
+      <div class="reward-text">+1 Diamond Claimed!</div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation -->
     <nav class="bottom-nav">
-        <button class="nav-item active" data-tab="home">
-            <i data-lucide="home"></i>
-            <span>Home</span>
-        </button>
-        <button class="nav-item" data-tab="earn">
-            <i data-lucide="tv"></i>
-            <span>Earn</span>
-        </button>
-        <button class="nav-item" data-tab="box">
-            <i data-lucide="gift"></i>
-            <span>Box</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='redeem.html'">
-            <i data-lucide="award"></i>
-            <span>Redeem</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='profile.html'">
-            <i data-lucide="user"></i>
-            <span>Profile</span>
-        </button>
+      <a href="dashboard.html" class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="dashboard.html#earn" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+        <span>Earn</span>
+      </a>
+      <a href="dashboard.html#box" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+          <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+        </svg>
+        <span>Box</span>
+      </a>
+      <a href="redeem.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+        </svg>
+        <span>Redeem</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
     </nav>
+  </div>
 
-    <script src="firebase.js"></script>
-    <script src="database.js"></script>
-    <script src="app.js"></script>
-    <script>
-        // Initialize Lucide Icons
-        lucide.createIcons();
-    </script>
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
+  <script src="database.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Handle Tab Switching via Hash
+    function handleHashChange() {
+      const hash = window.location.hash;
+      const earnSection = document.getElementById('earn-section');
+      const boxSection = document.getElementById('box-section');
+      const navItems = document.querySelectorAll('.nav-item');
+
+      // Hide all sections first
+      if (earnSection) earnSection.classList.add('hidden');
+      if (boxSection) boxSection.classList.add('hidden');
+      
+      // Reset active nav state
+      navItems.forEach(item => item.classList.remove('active'));
+
+      if (hash === '#earn') {
+        if (earnSection) earnSection.classList.remove('hidden');
+        document.querySelector('a[href="dashboard.html#earn"]').classList.add('active');
+      } else if (hash === '#box') {
+        if (boxSection) boxSection.classList.remove('hidden');
+        document.querySelector('a[href="dashboard.html#box"]').classList.add('active');
+      } else {
+        document.querySelector('a[href="dashboard.html"]').classList.add('active');
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('load', handleHashChange);
+  </script>
 </body>
 </html>

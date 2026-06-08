@@ -1,178 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Radeem App</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Radeem App</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22 width=%22100%22 height=%22100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%234F46E5%22/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="app-body">
-    <!-- Top Header -->
+<body>
+  <div class="app-container">
+    <!-- Header -->
     <header class="app-header">
-        <div class="header-title-only">
-            <h2>My Profile</h2>
-        </div>
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+        <span class="logo-text">Radeem</span>
+      </div>
+      <button onclick="logoutUser()" class="balance-badge" style="background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-light); cursor: pointer;">
+        Logout
+      </button>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="app-content profile-content">
-        <div class="profile-card-main">
-            <div class="profile-avatar-container">
-                <img id="profile-avatar" src="https://image.pollinations.ai/prompt/minimalist%20cute%203d%20avatar%20boy%20smiling" alt="Avatar" class="profile-avatar">
-                <button class="edit-avatar-btn" id="edit-avatar-btn">
-                    <i data-lucide="camera"></i>
-                </button>
-            </div>
-            <h3 id="profile-username">Loading...</h3>
-            <p id="profile-email" class="profile-email">Loading...</p>
-            <span class="join-date" id="profile-join-date">Joined: --/--/----</span>
+    <!-- Main Content -->
+    <main class="content-area">
+      <div class="profile-card">
+        <div class="profile-avatar-wrapper" id="profile-avatar-container">
+          <!-- Avatar rendered dynamically -->
+        </div>
+        
+        <div id="profile-display-group">
+          <h2 class="profile-name" id="profile-name">Loading...</h2>
+          <p class="profile-email" id="profile-email">...</p>
+          <button id="edit-profile-btn" class="btn-primary" style="margin-top: 15px; padding: 8px 16px; font-size: 0.85rem; width: auto; display: inline-flex;">
+            Edit Profile
+          </button>
         </div>
 
-        <!-- Edit Profile Form -->
-        <div class="profile-section-card">
-            <h3>Edit Profile</h3>
-            <div id="profile-alert" class="alert hidden"></div>
-            <form id="edit-profile-form">
-                <div class="form-group">
-                    <label for="edit-username">Username</label>
-                    <input type="text" id="edit-username" placeholder="Enter new username" required>
-                </div>
-                <button type="submit" id="btn-save-profile" class="btn btn-primary btn-block">Save Changes</button>
-            </form>
+        <!-- Edit Profile Form (Hidden by default) -->
+        <div id="profile-edit-form" class="hidden" style="margin-top: 15px;">
+          <div class="form-group">
+            <input type="text" id="edit-username" class="form-input" style="padding: 10px 14px;" placeholder="New Username">
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="save-profile-btn" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; width: auto;">Save</button>
+            <button onclick="document.getElementById('profile-display-group').classList.remove('hidden'); document.getElementById('profile-edit-form').classList.add('hidden');" class="btn-google" style="padding: 8px 16px; font-size: 0.85rem; width: auto;">Cancel</button>
+          </div>
         </div>
 
-        <!-- Stats Summary -->
-        <div class="profile-section-card">
-            <h3>Your Statistics</h3>
-            <div class="profile-stats-grid">
-                <div class="p-stat-item">
-                    <span class="p-stat-icon">🪙</span>
-                    <span class="p-stat-val" id="p-coins">0</span>
-                    <span class="p-stat-lbl">Coins</span>
-                </div>
-                <div class="p-stat-item">
-                    <span class="p-stat-icon">💎</span>
-                    <span class="p-stat-val" id="p-diamonds">0</span>
-                    <span class="p-stat-lbl">Diamonds</span>
-                </div>
-                <div class="p-stat-item">
-                    <span class="p-stat-icon">🎁</span>
-                    <span class="p-stat-val" id="p-redeems">0</span>
-                    <span class="p-stat-lbl">Redeems</span>
-                </div>
-            </div>
+        <div class="profile-stats-grid">
+          <div class="profile-stat-card">
+            <div class="profile-stat-val" id="profile-coins">0</div>
+            <div class="profile-stat-lbl">Coins</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-val" id="profile-diamonds">0</div>
+            <div class="profile-stat-lbl">Diamonds</div>
+          </div>
         </div>
 
-        <!-- Logout Button -->
-        <div class="logout-container">
-            <button id="btn-logout" class="btn btn-danger btn-block">
-                <i data-lucide="log-out"></i> Logout Account
-            </button>
+        <div class="profile-info-list">
+          <div class="profile-info-item">
+            <span class="profile-info-lbl">Joined On</span>
+            <span class="profile-info-val" id="profile-join-date">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-lbl">Status</span>
+            <span class="profile-info-val" style="color: var(--success);">Active Member</span>
+          </div>
         </div>
+      </div>
     </main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation -->
     <nav class="bottom-nav">
-        <button class="nav-item" onclick="window.location.href='dashboard.html'">
-            <i data-lucide="home"></i>
-            <span>Home</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=earn'">
-            <i data-lucide="tv"></i>
-            <span>Earn</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=box'">
-            <i data-lucide="gift"></i>
-            <span>Box</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='redeem.html'">
-            <i data-lucide="award"></i>
-            <span>Redeem</span>
-        </button>
-        <button class="nav-item active">
-            <i data-lucide="user"></i>
-            <span>Profile</span>
-        </button>
+      <a href="dashboard.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="dashboard.html#earn" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+        <span>Earn</span>
+      </a>
+      <a href="dashboard.html#box" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+          <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+        </svg>
+        <span>Box</span>
+      </a>
+      <a href="redeem.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+        </svg>
+        <span>Redeem</span>
+      </a>
+      <a href="profile.html" class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
     </nav>
+  </div>
 
-    <script src="firebase.js"></script>
-    <script src="database.js"></script>
-    <script src="auth.js"></script>
-    <script>
-        lucide.createIcons();
-
-        // Load Profile Data
-        firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Sync user data in real-time
-            syncUserData(user.uid, (data) => {
-                if (data) {
-                    document.getElementById('profile-username').innerText = data.username || 'User';
-                    document.getElementById('profile-email').innerText = data.email;
-                    document.getElementById('edit-username').value = data.username || '';
-                    document.getElementById('p-coins').innerText = data.coins || 0;
-                    document.getElementById('p-diamonds').innerText = data.diamonds || 0;
-                    
-                    if (data.createdAt) {
-                        const date = new Date(data.createdAt);
-                        document.getElementById('profile-join-date').innerText = `Joined: ${date.toLocaleDateString()}`;
-                    }
-                }
-            });
-
-            // Get total redeems count
-            firebase.database().ref(`redeemRequests`).orderByChild('uid').equalTo(user.uid)
-                .on('value', (snapshot) => {
-                    const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
-                    document.getElementById('p-redeems').innerText = count;
-                });
-        });
-
-        // Handle Profile Edit Form
-        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newUsername = document.getElementById('edit-username').value;
-            const btn = document.getElementById('btn-save-profile');
-            const alertBox = document.getElementById('profile-alert');
-            
-            btn.disabled = true;
-            btn.innerText = 'Saving...';
-            
-            try {
-                const user = firebase.auth().currentUser;
-                await firebase.database().ref(`users/${user.uid}`).update({
-                    username: newUsername
-                });
-                alertBox.innerText = 'Profile updated successfully!';
-                alertBox.className = 'alert success';
-                alertBox.classList.remove('hidden');
-            } catch (error) {
-                alertBox.innerText = error.message;
-                alertBox.className = 'alert error';
-                alertBox.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Save Changes';
-                setTimeout(() => alertBox.classList.add('hidden'), 3000);
-            }
-        });
-
-        // Handle Logout
-        document.getElementById('btn-logout').addEventListener('click', async () => {
-            await logoutUser();
-        });
-    </script>
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
+  <script src="database.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
