@@ -47,16 +47,6 @@ const defaultFirebaseConfig = {
 
 let firebaseConfig = defaultFirebaseConfig;
 
-// Check if user has overridden the config via the settings modal
-try {
-    const savedConfig = localStorage.getItem('radeem_firebase_config');
-    if (savedConfig) {
-        firebaseConfig = JSON.parse(savedConfig);
-    }
-} catch (e) {
-    console.warn("Failed to parse saved Firebase config, using default.", e);
-}
-
 // Initialize Firebase
 let db = null;
 let auth = null;
@@ -98,8 +88,6 @@ const adModal = document.getElementById('ad-modal');
 const adTimerEl = document.getElementById('ad-timer');
 const historyList = document.getElementById('history-list');
 const toast = document.getElementById('toast');
-const configModal = document.getElementById('config-modal');
-const configInput = document.getElementById('firebase-config-input');
 
 let isOpening = false;
 
@@ -107,11 +95,6 @@ let isOpening = false;
 function init() {
     initFirebase();
     
-    // Populate config input if exists
-    if (firebaseConfig) {
-        configInput.value = JSON.stringify(firebaseConfig, null, 2);
-    }
-
     if (isFirebaseActive) {
         // Listen for Auth State Changes
         auth.onAuthStateChanged(user => {
@@ -136,7 +119,7 @@ function init() {
 
 // Handle Real Firebase Login
 function handleUserLogin(user) {
-    state.user = {
+    state.user = { 
         uid: user.uid,
         displayName: user.displayName || "Radeemer",
         photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style" 
@@ -283,7 +266,7 @@ function switchTab(tabId) {
 
 // Try to Open Mystery Box
 function tryOpenBox() {
-    if (isOpening) return;
+    if (isOpening) return; 
 
     if (state.diamonds < 19) {
         showToast("❌ Need 19 Diamonds! Watch an ad below.");
@@ -451,40 +434,6 @@ function showToast(message) {
     setTimeout(() => {
         toast.classList.remove('show');
     }, 2500);
-}
-
-// Toggle Firebase Config Modal
-function toggleConfigModal() {
-    configModal.classList.toggle('active');
-}
-
-// Save Firebase Config
-function saveFirebaseConfig() {
-    const val = configInput.value.trim();
-    if (!val) {
-        localStorage.removeItem('radeem_firebase_config');
-        showToast("Firebase config cleared. Running with default live server.");
-        setTimeout(() => window.location.reload(), 1000);
-        return;
-    }
-
-    try {
-        let cleanVal = val;
-        if (!val.startsWith('{')) {
-            throw new Error("Invalid format");
-        }
-        cleanVal = val
-            .replace(/(\w+)\s*:/g, '"$1":')
-            .replace(/'/g, '"')
-            .replace(/,\s*}/g, '}');
-            
-        const parsed = JSON.parse(cleanVal);
-        localStorage.setItem('radeem_firebase_config', JSON.stringify(parsed));
-        showToast("✅ Firebase Config Saved! Reloading...");
-        setTimeout(() => window.location.reload(), 1500);
-    } catch (e) {
-        showToast("❌ Invalid JSON format. Please check your config.");
-    }
 }
 
 // Run App
