@@ -1,401 +1,275 @@
-// App State Management
+// State Management
 let state = {
-    user: null,
-    coins: 0,
-    diamonds: 19, // Default starting diamonds
-    history: [],
-    loaded: false
+    coins: parseInt(localStorage.getItem('radeem_coins')) || 0,
+    diamonds: parseInt(localStorage.getItem('radeem_diamonds')) || 0,
+    history: JSON.parse(localStorage.getItem('radeem_history')) || []
 };
 
-// Security Splitting for Sensitive Credentials
-// 1. API Key Split
-const kPart1 = "AIzaSyBhuS";
-const kPart2 = "xkjcsZ3TtNGY";
-const kPart3 = "COXOOl7-WWG_EsgPo";
-
-// 2. Google Client ID Split
-const cPart1 = "1059355688483-";
-const cPart2 = "ee9g0rurtbo4k1o5kafkunrot9nkge97";
-const cPart3 = ".apps.googleusercontent.com";
-
-// 3. App ID Split
-const aPart1 = "1:1059355688483:";
-const aPart2 = "web:a71b5f3bc4fb31ee";
-const aPart3 = "86fb96";
-
-// 4. Database URL Split
-const dPart1 = "https://ililbb-70fb0-";
-const dPart2 = "default-rtdb.";
-const dPart3 = "firebaseio.com";
-
-// Reconstructed Credentials
-const secureApiKey = kPart1 + kPart2 + kPart3;
-const secureClientId = cPart1 + cPart2 + cPart3;
-const secureAppId = aPart1 + aPart2 + aPart3;
-const secureDatabaseUrl = dPart1 + dPart2 + dPart3;
-
-// Hardcoded Live Firebase Configuration reconstructed securely
-const firebaseConfig = {
-    apiKey: secureApiKey,
-    authDomain: "ililbb-70fb0.firebaseapp.com",
-    databaseURL: secureDatabaseUrl,
-    projectId: "ililbb-70fb0",
-    storageBucket: "ililbb-70fb0.firebasestorage.app",
-    messagingSenderId: "1059355688483",
-    appId: secureAppId,
-    measurementId: "G-GVEB9G3V95"
-};
-
-// Initialize Firebase
-let db = null;
-let auth = null;
-let isFirebaseActive = false;
-
-function initFirebase() {
+// Audio Synthesis for Game-like Sound Effects
+const playSound = (type) => {
     try {
-        if (firebase.apps.length === 0) {
-            firebase.initializeApp(firebaseConfig);
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'click') {
+            osc.frequency.setValueAtTime(400, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+        } else if (type === 'success') {
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
+            osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3); // C6
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+        } else if (type === 'error') {
+            osc.frequency.setValueAtTime(220, ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.25);
+        } else if (type === 'ad') {
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.2);
         }
-        db = firebase.database(); // Using Realtime Database as requested
-        auth = firebase.auth();
-        isFirebaseActive = true;
-        console.log("Firebase Realtime Database successfully initialized!");
-    } catch (error) {
-        console.error("Firebase initialization error:", error);
-        showToast("⚠️ Firebase connection failed. Please check your network.");
-        isFirebaseActive = false;
+    } catch (e) {
+        console.log('Audio context not allowed yet');
     }
-}
+};
 
-// DOM Elements
-const loginScreen = document.getElementById('login-screen');
-const appContainer = document.getElementById('app-container');
-const userAvatarEl = document.getElementById('user-avatar');
-const userNameEl = document.getElementById('user-name');
-const coinCountEl = document.getElementById('coin-count');
-const diamondCountEl = document.getElementById('diamond-count');
-const mysteryBox = document.getElementById('mystery-box');
-const glowEffect = document.getElementById('glow-effect');
-const rewardPopup = document.getElementById('reward-popup');
-const boxHint = document.getElementById('box-hint');
-const adModal = document.getElementById('ad-modal');
-const adTimerEl = document.getElementById('ad-timer');
-const historyList = document.getElementById('history-list');
-const toast = document.getElementById('toast');
-const qrCodeImg = document.getElementById('qr-code-img');
-
-let isOpening = false;
-let dbRef = null;
-
-// Initialize App
-function init() {
-    initFirebase();
-    
-    // Dynamically set QR code to current URL for desktop blocker
-    if (qrCodeImg) {
-        qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href)}`;
-    }
-    
-    if (isFirebaseActive) {
-        // Listen for Auth State Changes
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                handleUserLogin(user);
-            } else {
-                handleUserLogout();
-            }
-        });
-    } else {
-        showToast("❌ Firebase is offline. Real-time features unavailable.");
-    }
-}
-
-// Handle Real Firebase Login
-function handleUserLogin(user) {
-    state.user = {
-        uid: user.uid,
-        displayName: user.displayName || "Radeemer",
-        photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style"
-    };
-    state.loaded = false;
-
-    // Sync with Realtime Database in real-time
-    dbRef = db.ref('users/' + user.uid);
-    dbRef.on('value', snapshot => {
-        const data = snapshot.val();
-        if (data) {
-            state.coins = data.coins ?? 0;
-            state.diamonds = data.diamonds ?? 19;
-            state.history = data.history ?? [];
-        } else {
-            // Auto-set default values for new users in Realtime Database
-            dbRef.set({
-                coins: 0,
-                diamonds: 19,
-                history: []
-            });
-            state.coins = 0;
-            state.diamonds = 19;
-            state.history = [];
-        }
-        state.loaded = true;
-        updateUI();
-        renderHistory();
-    }, error => {
-        console.error("Database sync error:", error);
-        showToast("⚠️ Database permission error. Check Security Rules!");
-    });
-
-    showApp();
-}
-
-// Handle Real Firebase Logout
-function handleUserLogout() {
-    if (dbRef) {
-        dbRef.off(); // Detach listener
-    }
-    state = {
-        user: null,
-        coins: 0,
-        diamonds: 19,
-        history: [],
-        loaded: false
-    };
-    hideApp();
-}
-
-// Show/Hide App Screens
-function showApp() {
-    loginScreen.style.display = 'none';
-    appContainer.style.display = 'flex';
-    
-    if (state.user) {
-        userAvatarEl.src = state.user.photoURL;
-        userNameEl.textContent = state.user.displayName;
-    }
-}
-
-function hideApp() {
-    loginScreen.style.display = 'flex';
-    appContainer.style.display = 'none';
-}
-
-// Google Sign-In Action
-function loginWithGoogle() {
-    if (!isFirebaseActive) {
-        showToast("❌ Firebase is not active.");
-        return;
-    }
-    
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({
-        client_id: secureClientId
-    });
-    
-    auth.signInWithPopup(provider).then(result => {
-        showToast(`👋 Welcome ${result.user.displayName}!`);
-    }).catch(error => {
-        console.error("Google Sign-In Error:", error);
-        if (error.code === 'auth/operation-not-allowed') {
-            showToast("❌ Enable Google Sign-In in Firebase Console!");
-        } else {
-            showToast(`❌ Sign-In failed: ${error.message}`);
-        }
-    });
-}
-
-// Logout Action
-function logout() {
-    if (isFirebaseActive) {
-        auth.signOut().then(() => {
-            showToast("Logged out successfully.");
-        }).catch(err => {
-            console.error("Logout error:", err);
-        });
-    } else {
-        hideApp();
-    }
-}
-
-// Update Balances UI
+// Update UI Elements
 function updateUI() {
-    coinCountEl.textContent = state.coins;
-    diamondCountEl.textContent = state.diamonds;
+    document.getElementById('coin-balance').innerText = state.coins.toLocaleString();
+    document.getElementById('diamond-balance').innerText = state.diamonds.toLocaleString();
+    saveState();
+    renderHistory();
+}
+
+// Save State to LocalStorage
+function saveState() {
+    localStorage.setItem('radeem_coins', state.coins);
+    localStorage.setItem('radeem_diamonds', state.diamonds);
+    localStorage.setItem('radeem_history', JSON.stringify(state.history));
 }
 
 // Tab Switching Logic
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    playSound('click');
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    // Show selected tab
+    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-    event.currentTarget.classList.add('active');
+    // Update navigation active states
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active', 'text-indigo-600', 'font-semibold');
+        btn.classList.add('text-slate-400');
+    });
+    const activeBtn = document.getElementById(`nav-${tabId}`);
+    activeBtn.classList.add('active', 'text-indigo-600', 'font-semibold');
+    activeBtn.classList.remove('text-slate-400');
 }
 
-// Try to Open Mystery Box
-function tryOpenBox() {
-    if (isOpening) return; 
-
-    if (!state.loaded) {
-        showToast("⏳ Loading your account data...");
-        return;
-    }
-
-    if (state.diamonds < 19) {
-        showToast("❌ Need 19 Diamonds! Watch an ad below.");
-        return;
-    }
-
-    isOpening = true;
-    state.diamonds -= 19;
+// Toast Notification
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+    toastMsg.innerText = message;
     
-    // Save state immediately to Realtime Database
-    saveStateToServer();
-
-    // 1. Shake Animation
-    mysteryBox.classList.add('shake');
-    boxHint.textContent = "Unlocking...";
-
-    setTimeout(() => { 
-        mysteryBox.classList.remove('shake');
-        
-        // 2. Open Animation
-        mysteryBox.classList.add('open');
-        glowEffect.classList.add('active');
-        
-        // 3. Show Reward Popup
-        rewardPopup.classList.add('show');
-        
-        // 4. Add Coins
-        state.coins += 190;
-        saveStateToServer();
-        showToast("🎉 Opened! +190 Coins added!");
-
-        // 5. Reset Box after delay
-        setTimeout(() => {
-            mysteryBox.classList.remove('open');
-            glowEffect.classList.remove('active');
-            rewardPopup.classList.remove('show');
-            boxHint.textContent = "Touch the box to unlock rewards!";
-            isOpening = false;
-        }, 3000);
-
-    }, 600);
-}
-
-// Watch Ad Simulation
-function watchAd() {
-    if (!state.loaded) {
-        showToast("⏳ Loading your account data...");
-        return;
+    if (isError) {
+        toast.classList.remove('bg-slate-800');
+        toast.classList.add('bg-rose-600');
+    } else {
+        toast.classList.remove('bg-rose-600');
+        toast.classList.add('bg-slate-800');
     }
 
-    adModal.classList.add('active');
+    toast.classList.remove('opacity-0', 'pointer-events-none');
+    toast.classList.add('opacity-100');
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.classList.remove('opacity-100');
+    }, 3000);
+}
+
+// Simulated Video Ad Logic
+const btnWatchAd = document.getElementById('btn-watch-ad');
+const adModal = document.getElementById('ad-modal');
+const adTimer = document.getElementById('ad-timer');
+const btnCloseAd = document.getElementById('btn-close-ad');
+
+btnWatchAd.addEventListener('click', () => {
+    playSound('click');
+    adModal.classList.remove('hidden');
     let timeLeft = 5;
-    adTimerEl.textContent = `${timeLeft}s`;
+    adTimer.innerText = `${timeLeft}s`;
+    btnCloseAd.disabled = true;
+    btnCloseAd.className = "w-full bg-slate-200 text-slate-400 font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed";
+    btnCloseAd.innerHTML = `<span>Wait to Skip (${timeLeft}s)</span>`;
 
     const interval = setInterval(() => {
         timeLeft--;
-        adTimerEl.textContent = `${timeLeft}s`;
-
-        if (timeLeft <= 0) {
+        if (timeLeft > 0) {
+            adTimer.innerText = `${timeLeft}s`;
+            btnCloseAd.innerHTML = `<span>Wait to Skip (${timeLeft}s)</span>`;
+        } else {
             clearInterval(interval);
-            adModal.classList.remove('active');
-            
-            // Reward user
-            state.diamonds += 19;
-            saveStateToServer();
-            showToast("💎 +19 Diamonds Claimed!");
+            adTimer.innerText = "Reward Ready!";
+            adTimer.className = "bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded-full";
+            btnCloseAd.disabled = false;
+            btnCloseAd.className = "w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer";
+            btnCloseAd.innerHTML = `<span>Claim 19 Diamonds</span> <i class="fa-solid fa-circle-check"></i>`;
+            playSound('ad');
         }
     }, 1000);
+});
+
+btnCloseAd.addEventListener('click', () => {
+    if (btnCloseAd.disabled) return;
+    adModal.classList.add('hidden');
+    // Reset timer badge style
+    adTimer.className = "bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full";
+    
+    // Reward diamonds
+    state.diamonds += 19;
+    updateUI();
+    playSound('success');
+    showToast("🎉 +19 Diamonds added to your wallet!");
+});
+
+// Mystery Box Opening Logic
+const btnOpenBox = document.getElementById('btn-open-box');
+const mysteryBoxContainer = document.getElementById('mystery-box-container');
+const rewardModal = document.getElementById('reward-modal');
+const rewardCard = document.getElementById('reward-card');
+
+btnOpenBox.addEventListener('click', triggerBoxOpen);
+mysteryBoxContainer.addEventListener('click', triggerBoxOpen);
+
+function triggerBoxOpen() {
+    if (state.diamonds < 19) {
+        playSound('error');
+        showToast("❌ Not enough Diamonds! Watch an ad to get 19 Diamonds.", true);
+        return;
+    }
+
+    // Deduct diamonds
+    state.diamonds -= 19;
+    updateUI();
+    playSound('click');
+
+    // Trigger shake animation
+    mysteryBoxContainer.classList.add('shake-box');
+    
+    setTimeout(() => {
+        mysteryBoxContainer.classList.remove('shake-box');
+        // Reward coins
+        state.coins += 190;
+        updateUI();
+        
+        // Show reward modal
+        rewardModal.classList.remove('hidden');
+        setTimeout(() => {
+            rewardCard.classList.remove('scale-95');
+            rewardCard.classList.add('scale-100');
+        }, 50);
+        
+        playSound('success');
+        triggerConfetti();
+    }, 800);
+}
+
+function closeRewardModal() {
+    playSound('click');
+    rewardCard.classList.remove('scale-100');
+    rewardCard.classList.add('scale-95');
+    setTimeout(() => {
+        rewardModal.classList.add('hidden');
+    }, 150);
 }
 
 // Redeem Code Logic
-function redeemCode(provider, cost) {
-    if (!state.loaded) {
-        showToast("⏳ Loading your account data...");
+function redeemCode(amountRs, coinCost) {
+    if (state.coins < coinCost) {
+        playSound('error');
+        showToast(`❌ Insufficient coins! You need ${coinCost} coins.`, true);
         return;
     }
 
-    if (state.coins < cost) {
-        showToast(`❌ Need ${cost} Coins to redeem!`);
-        return;
-    }
-
-    state.coins -= cost;
+    // Deduct coins
+    state.coins -= coinCost;
     
-    // Generate a realistic looking redeem code
-    const generatedCode = generateRandomCode();
-    
-    // Add to history
-    const newRedemption = { 
-        id: Date.now(),
-        provider: provider,
-        code: generatedCode,
-        date: new Date().toLocaleDateString(),
-        value: "₹10 RS"
-    };
-
-    state.history.unshift(newRedemption);
-    saveStateToServer();
-    renderHistory();
-    showToast("🎟️ Code Redeemed! Check History tab.");
-}
-
-// Helper: Save state to Realtime Database
-function saveStateToServer() {
-    if (isFirebaseActive && state.user && state.loaded) {
-        db.ref('users/' + state.user.uid).update({
-            coins: state.coins,
-            diamonds: state.diamonds,
-            history: state.history
-        }).catch(err => {
-            console.error("Error updating server state:", err);
-            showToast("⚠️ Server sync failed. Check connection.");
-        });
-    }
-}
-
-// Helper: Generate Random Code
-function generateRandomCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let segment1 = '';
-    let segment2 = '';
-    let segment3 = '';
-    
+    // Generate mock Google Play Redeem Code
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = 'GP-';
     for (let i = 0; i < 4; i++) {
-        segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
-        segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
-        segment3 += chars.charAt(Math.floor(Math.random() * chars.length));
+        for (let j = 0; j < 4; j++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        if (i < 3) code += '-';
     }
-    return `RADM-${segment1}-${segment2}-${segment3}`;
+
+    // Add to history
+    const redeemItem = {
+        id: Date.now(),
+        title: `₹${amountRs} Google Play Code`,
+        code: code,
+        cost: coinCost,
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    };
+    
+    state.history.unshift(redeemItem);
+    updateUI();
+    playSound('success');
+    triggerConfetti();
+
+    // Show success alert with code
+    alert(`🎉 Redemption Successful!\n\nYour ₹${amountRs} Google Play Redeem Code is:\n${code}\n\nYou can copy this code anytime from the History tab.`);
 }
 
-// Render History Tab
+// Render History List
 function renderHistory() {
-    if (!state.history || state.history.length === 0) {
+    const historyList = document.getElementById('history-list');
+    if (state.history.length === 0) {
         historyList.innerHTML = `
-            <div class="empty-state">
-                <span class="empty-icon">📭</span>
-                <p>No codes redeemed yet. Start opening boxes!</p>
+            <div class="text-center py-12 text-slate-400">
+                <i class="fa-solid fa-receipt text-4xl mb-3 opacity-50"></i>
+                <p class="text-sm">No codes redeemed yet. Start earning!</p>
             </div>
         `;
         return;
     }
 
     historyList.innerHTML = state.history.map(item => `
-        <div class="history-item">
-            <div class="history-info">
-                <h4>${item.provider} (${item.value})</h4>
-                <span>Redeemed on ${item.date}</span>
+        <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm">${item.title}</h4>
+                    <span class="text-[10px] text-slate-400">${item.date}</span>
+                </div>
+                <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
+                    -${item.cost} Coins
+                </span>
             </div>
-            <div class="code-display">
-                <span class="code-text" onclick="copyToClipboard('${item.code}')" title="Click to Copy">${item.code}</span>
-                <span style="font-size: 9px; color: var(--text-muted);">Tap to copy</span>
+            <div class="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-2.5">
+                <code class="font-mono font-bold text-indigo-600 text-xs tracking-wider">${item.code}</code>
+                <button onclick="copyToClipboard('${item.code}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-all">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
             </div>
         </div>
     `).join('');
@@ -404,21 +278,35 @@ function renderHistory() {
 // Copy to Clipboard Helper
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
+        playSound('click');
         showToast("📋 Code copied to clipboard!");
     }).catch(err => {
-        showToast("❌ Failed to copy code.");
+        showToast("❌ Failed to copy code", true);
     });
 }
 
-// Show Toast Notification
-function showToast(message) {
-    toast.textContent = message;
-    toast.classList.add('show');
+// Confetti Animation Effect
+function triggerConfetti() {
+    const container = document.getElementById('confetti-container');
+    const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
     
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2500);
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.transform = `scale(${Math.random() * 0.6 + 0.4})`;
+        confetti.style.animationDuration = Math.random() * 2 + 1.5 + 's';
+        container.appendChild(confetti);
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            confetti.remove();
+        }, 3500);
+    }
 }
 
-// Run App
-init();
+// Initial Load
+window.onload = () => {
+    updateUI();
+};
