@@ -59,9 +59,8 @@ body {
 }
 
 .auth-logo {
-    display: flex;
+    display: flex; 
     flex-direction: column;
-    align-items: center;
     gap: 8px;
 }
 
@@ -277,7 +276,7 @@ body {
     display: flex;
     background: #F1F2F6;
     padding: 6px;
-    margin: 15px 20px;
+    margin: 15px 20px; 
     border-radius: 16px;
 }
 

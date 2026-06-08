@@ -312,7 +312,7 @@ function redeemCode(provider, cost) {
     const generatedCode = generateRandomCode();
     
     // Add to history
-    const newRedemption = {
+    const newRedemption = { 
         id: Date.now(),
         provider: provider,
         code: generatedCode,
@@ -433,7 +433,7 @@ function saveFirebaseConfig() {
         localStorage.setItem('radeem_firebase_config', JSON.stringify(parsed));
         showToast("✅ Firebase Config Saved! Reloading...");
         setTimeout(() => window.location.reload(), 1500);
-     catch (e) {
+    } catch (e) {
         showToast("❌ Invalid JSON format. Please check your config.");
     }
 }
