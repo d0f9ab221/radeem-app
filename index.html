@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -65,12 +65,76 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
-  <!-- Firebase Compat SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-  
-  <!-- Unified App Script -->
-  <script src="script.js"></script>
+  <script type="module">
+    import { loginUser, loginWithGoogle, loginAsGuest, resetPassword, checkAuthState } from './auth.js';
+
+    const loginForm = document.getElementById('login-form');
+    const googleBtn = document.getElementById('google-signin-btn');
+    const guestBtn = document.getElementById('guest-login-btn');
+    const forgotLink = document.getElementById('forgot-password-link');
+    const toast = document.getElementById('toast');
+
+    function showToast(message, isError = false) {
+      toast.textContent = message;
+      toast.style.borderLeft = isError ? '4px solid var(--danger)' : '4px solid var(--success)';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    checkAuthState((user) => {
+      if (user) {
+        window.location.href = 'dashboard.html';
+      }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      const res = await loginUser(email, password);
+      if (res.success) {
+        showToast('Login successful! Redirecting...');
+        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+      } else {
+        showToast(res.error, true);
+      }
+    });
+
+    googleBtn.addEventListener('click', async () => {
+      const res = await loginWithGoogle();
+      if (res.success) {
+        showToast('Google Login successful!');
+        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+      } else {
+        showToast(res.error, true);
+      }
+    });
+
+    guestBtn.addEventListener('click', async () => {
+      const res = await loginAsGuest();
+      if (res.success) {
+        showToast('Logged in as Guest! Redirecting...');
+        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+      } else {
+        showToast(res.error, true);
+      }
+    });
+
+    forgotLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      if (!email) {
+        showToast('Please enter your email address first.', true);
+        return;
+      }
+      const res = await resetPassword(email);
+      if (res.success) {
+        showToast('Password reset email sent!');
+      } else {
+        showToast(res.error, true);
+      }
+    });
+  </script>
 </body>
 </html>
