@@ -2,9 +2,9 @@
 let state = {
     user: null,
     coins: 0,
-    diamonds: 19, // Start with 19 so they can try immediately!
+    diamonds: 19, // Default starting diamonds
     history: [],
-    loaded: false // Guard flag to prevent overwriting server data with defaults
+    loaded: false
 };
 
 // Security Splitting for Sensitive Credentials
@@ -35,7 +35,7 @@ const secureAppId = aPart1 + aPart2 + aPart3;
 const secureDatabaseUrl = dPart1 + dPart2 + dPart3;
 
 // Hardcoded Live Firebase Configuration reconstructed securely
-const defaultFirebaseConfig = {
+const firebaseConfig = {
     apiKey: secureApiKey,
     authDomain: "ililbb-70fb0.firebaseapp.com",
     databaseURL: secureDatabaseUrl,
@@ -46,32 +46,24 @@ const defaultFirebaseConfig = {
     measurementId: "G-GVEB9G3V95"
 };
 
-let firebaseConfig = defaultFirebaseConfig;
-
 // Initialize Firebase
 let db = null;
 let auth = null;
 let isFirebaseActive = false;
 
 function initFirebase() {
-    if (firebaseConfig && firebaseConfig.apiKey) {
-        try {
-            // Prevent re-initialization
-            if (firebase.apps.length === 0) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            // Switched to Realtime Database
-            db = firebase.database();
-            auth = firebase.auth();
-            isFirebaseActive = true;
-            console.log("Firebase Realtime Database successfully initialized!");
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-            showToast("⚠️ Firebase config error. Running in Demo Mode.");
-            isFirebaseActive = false;
+    try {
+        if (firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
         }
-    } else {
-        console.log("No Firebase config found. Running in Demo Mode.");
+        db = firebase.database(); // Using Realtime Database as requested
+        auth = firebase.auth();
+        isFirebaseActive = true;
+        console.log("Firebase Realtime Database successfully initialized!");
+    } catch (error) {
+        console.error("Firebase initialization error:", error);
+        showToast("⚠️ Firebase connection failed. Please check your network.");
+        isFirebaseActive = false;
     }
 }
 
@@ -93,6 +85,7 @@ const toast = document.getElementById('toast');
 const qrCodeImg = document.getElementById('qr-code-img');
 
 let isOpening = false;
+let dbRef = null;
 
 // Initialize App
 function init() {
@@ -113,16 +106,7 @@ function init() {
             }
         });
     } else {
-        // Demo Mode Fallback: Check local storage for simulated session
-        const demoUser = localStorage.getItem('radeem_demo_user');
-        if (demoUser) {
-            state.user = JSON.parse(demoUser);
-            state.loaded = true;
-            loadDemoData();
-            showApp();
-        } else {
-            hideApp();
-        }
+        showToast("❌ Firebase is offline. Real-time features unavailable.");
     }
 }
 
@@ -133,19 +117,19 @@ function handleUserLogin(user) {
         displayName: user.displayName || "Radeemer",
         photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style"
     };
-    state.loaded = false; // Reset loaded state until Realtime Database returns data
+    state.loaded = false;
 
     // Sync with Realtime Database in real-time
-    const userRef = db.ref('users/' + user.uid);
-    userRef.on('value', snapshot => {
+    dbRef = db.ref('users/' + user.uid);
+    dbRef.on('value', snapshot => {
         const data = snapshot.val();
         if (data) {
             state.coins = data.coins ?? 0;
             state.diamonds = data.diamonds ?? 19;
             state.history = data.history ?? [];
         } else {
-            // Create new user document on Realtime Database if it doesn't exist
-            userRef.set({
+            // Auto-set default values for new users in Realtime Database
+            dbRef.set({
                 coins: 0,
                 diamonds: 19,
                 history: []
@@ -154,12 +138,12 @@ function handleUserLogin(user) {
             state.diamonds = 19;
             state.history = [];
         }
-        state.loaded = true; // Mark as fully loaded from server
+        state.loaded = true;
         updateUI();
         renderHistory();
     }, error => {
-        console.error("Realtime Database sync error:", error);
-        showToast("⚠️ Database permission error. Check your Security Rules!");
+        console.error("Database sync error:", error);
+        showToast("⚠️ Database permission error. Check Security Rules!");
     });
 
     showApp();
@@ -167,6 +151,9 @@ function handleUserLogin(user) {
 
 // Handle Real Firebase Logout
 function handleUserLogout() {
+    if (dbRef) {
+        dbRef.off(); // Detach listener
+    }
     state = {
         user: null,
         coins: 0,
@@ -175,25 +162,6 @@ function handleUserLogout() {
         loaded: false
     };
     hideApp();
-}
-
-// Load Demo Mode Data
-function loadDemoData() {
-    state.coins = parseInt(localStorage.getItem('radeem_coins')) || 0;
-    state.diamonds = parseInt(localStorage.getItem('radeem_diamonds')) || 19;
-    state.history = JSON.parse(localStorage.getItem('radeem_history')) || [];
-    state.loaded = true;
-    updateUI();
-    renderHistory();
-}
-
-// Save Demo Mode Data
-function saveDemoData() {
-    if (!isFirebaseActive) {
-        localStorage.setItem('radeem_coins', state.coins);
-        localStorage.setItem('radeem_diamonds', state.diamonds);
-        localStorage.setItem('radeem_history', JSON.stringify(state.history));
-    }
 }
 
 // Show/Hide App Screens
@@ -214,67 +182,38 @@ function hideApp() {
 
 // Google Sign-In Action
 function loginWithGoogle() {
-    if (isFirebaseActive) {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        // Add custom client ID parameter to ensure correct OAuth client mapping
-        provider.setCustomParameters({
-            client_id: secureClientId
-        });
-        
-        auth.signInWithPopup(provider).then(result => {
-            showToast(`👋 Welcome ${result.user.displayName}!`);
-        }).catch(error => {
-            console.error("Google Sign-In Error:", error);
-            if (error.code === 'auth/operation-not-allowed') {
-                showToast("❌ Enable Google Sign-In in Firebase Console!");
-            } else {
-                showToast(`❌ Sign-In failed: ${error.message}`);
-            }
-        });
-    } else {
-        // Simulated Google Sign-In for Demo Mode
-        showToast("🚀 Running in Demo Mode (No Firebase Config)");
-        setTimeout(() => {
-            const mockUser = { 
-                uid: "demo_user_123",
-                displayName: "Demo User",
-                photoURL: "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style"
-            };
-            state.user = mockUser;
-            state.loaded = true;
-            localStorage.setItem('radeem_demo_user', JSON.stringify(mockUser));
-            loadDemoData();
-            showApp();
-            showToast("🎉 Logged in as Demo User!");
-        }, 800);
+    if (!isFirebaseActive) {
+        showToast("❌ Firebase is not active.");
+        return;
     }
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({
+        client_id: secureClientId
+    });
+    
+    auth.signInWithPopup(provider).then(result => {
+        showToast(`👋 Welcome ${result.user.displayName}!`);
+    }).catch(error => {
+        console.error("Google Sign-In Error:", error);
+        if (error.code === 'auth/operation-not-allowed') {
+            showToast("❌ Enable Google Sign-In in Firebase Console!");
+        } else {
+            showToast(`❌ Sign-In failed: ${error.message}`);
+        }
+    });
 }
 
 // Logout Action
 function logout() {
     if (isFirebaseActive) {
-        // Reset state immediately to prevent any accidental writes or flashes of old data
-        state = {
-            user: null,
-            coins: 0,
-            diamonds: 19,
-            history: [],
-            loaded: false
-        };
         auth.signOut().then(() => {
             showToast("Logged out successfully.");
+        }).catch(err => {
+            console.error("Logout error:", err);
         });
     } else {
-        localStorage.removeItem('radeem_demo_user');
-        state = {
-            user: null,
-            coins: 0,
-            diamonds: 19,
-            history: [],
-            loaded: false
-        };
         hideApp();
-        showToast("Logged out from Demo Mode.");
     }
 }
 
@@ -301,7 +240,7 @@ function switchTab(tabId) {
 function tryOpenBox() {
     if (isOpening) return; 
 
-    if (isFirebaseActive && !state.loaded) {
+    if (!state.loaded) {
         showToast("⏳ Loading your account data...");
         return;
     }
@@ -314,8 +253,8 @@ function tryOpenBox() {
     isOpening = true;
     state.diamonds -= 19;
     
-    // Save state locally or push to server
-    saveStateToServerOrLocal();
+    // Save state immediately to Realtime Database
+    saveStateToServer();
 
     // 1. Shake Animation
     mysteryBox.classList.add('shake');
@@ -333,7 +272,7 @@ function tryOpenBox() {
         
         // 4. Add Coins
         state.coins += 190;
-        saveStateToServerOrLocal();
+        saveStateToServer();
         showToast("🎉 Opened! +190 Coins added!");
 
         // 5. Reset Box after delay
@@ -343,14 +282,14 @@ function tryOpenBox() {
             rewardPopup.classList.remove('show');
             boxHint.textContent = "Touch the box to unlock rewards!";
             isOpening = false;
-        }, 3000); 
+        }, 3000);
 
     }, 600);
 }
 
 // Watch Ad Simulation
 function watchAd() {
-    if (isFirebaseActive && !state.loaded) {
+    if (!state.loaded) {
         showToast("⏳ Loading your account data...");
         return;
     }
@@ -369,7 +308,7 @@ function watchAd() {
             
             // Reward user
             state.diamonds += 19;
-            saveStateToServerOrLocal();
+            saveStateToServer();
             showToast("💎 +19 Diamonds Claimed!");
         }
     }, 1000);
@@ -377,7 +316,7 @@ function watchAd() {
 
 // Redeem Code Logic
 function redeemCode(provider, cost) {
-    if (isFirebaseActive && !state.loaded) {
+    if (!state.loaded) {
         showToast("⏳ Loading your account data...");
         return;
     }
@@ -402,28 +341,22 @@ function redeemCode(provider, cost) {
     };
 
     state.history.unshift(newRedemption);
-    saveStateToServerOrLocal();
+    saveStateToServer();
     renderHistory();
     showToast("🎟️ Code Redeemed! Check History tab.");
 }
 
-// Helper: Save state to Realtime Database or LocalStorage
-function saveStateToServerOrLocal() {
-    if (isFirebaseActive && state.user) {
-        // Only update if state is fully loaded to prevent overwriting with defaults
-        if (state.loaded) {
-            db.ref('users/' + state.user.uid).update({
-                coins: state.coins,
-                diamonds: state.diamonds,
-                history: state.history
-            }).catch(err => {
-                console.error("Error updating database state:", err);
-                showToast("⚠️ Server sync failed. Check connection.");
-            });
-        }
-    } else {
-        saveDemoData();
-        updateUI();
+// Helper: Save state to Realtime Database
+function saveStateToServer() {
+    if (isFirebaseActive && state.user && state.loaded) {
+        db.ref('users/' + state.user.uid).update({
+            coins: state.coins,
+            diamonds: state.diamonds,
+            history: state.history
+        }).catch(err => {
+            console.error("Error updating server state:", err);
+            showToast("⚠️ Server sync failed. Check connection.");
+        });
     }
 }
 
@@ -444,7 +377,7 @@ function generateRandomCode() {
 
 // Render History Tab
 function renderHistory() {
-    if (state.history.length === 0) {
+    if (!state.history || state.history.length === 0) {
         historyList.innerHTML = `
             <div class="empty-state">
                 <span class="empty-icon">📭</span>
