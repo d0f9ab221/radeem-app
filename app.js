@@ -71,7 +71,7 @@ function updateDashboardStats(data) {
   }
 }
 
-// Update Profile Details
+// Update Profile Details with Self-Healing Join Date
 function updateProfileDetails(data, authUser) {
   const profileName = document.getElementById('profile-name');
   const profileEmail = document.getElementById('profile-email');
@@ -85,13 +85,25 @@ function updateProfileDetails(data, authUser) {
   if (profileCoins) profileCoins.textContent = data.coins || 0;
   if (profileDiamonds) profileDiamonds.textContent = data.diamonds || 0;
   
-  if (profileJoinDate && data.createdAt) {
-    const date = new Date(data.createdAt);
-    profileJoinDate.textContent = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  if (profileJoinDate) {
+    if (data.createdAt) {
+      const date = new Date(data.createdAt);
+      profileJoinDate.textContent = "Joined " + date.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } else {
+      // Self-healing fallback: write createdAt if missing
+      const now = Date.now();
+      db.ref('users/' + authUser.uid + '/createdAt').set(now);
+      const date = new Date(now);
+      profileJoinDate.textContent = "Joined " + date.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
   }
 
   // Render Avatar (Google Photo or Initials SVG)
@@ -160,7 +172,7 @@ async function watchAd() {
   }
 }
 
-// Show Ad Reward Animation and Save to Firebase
+// Show Ad Reward Animation and Save to Firebase (+19 Diamonds)
 async function showAdReward() {
   const adModal = document.getElementById('ad-modal');
   const rewardAnimation = document.getElementById('reward-animation');
@@ -169,12 +181,11 @@ async function showAdReward() {
   
   if (rewardAnimation) {
     rewardAnimation.classList.add('active');
-    // Play reward sound or trigger haptic simulation here if desired
   }
 
-  // Save reward to Firebase (+1 Diamond)
+  // Save reward to Firebase (+19 Diamonds)
   if (currentUser) {
-    await updateUserBalances(currentUser.uid, 0, 1);
+    await updateUserBalances(currentUser.uid, 0, 19);
   }
 
   setTimeout(() => {
@@ -223,34 +234,42 @@ async function openMysteryBox() {
   // Deduct 19 Diamonds and Add 190 Coins instantly in Firebase
   const result = await updateUserBalances(currentUser.uid, 190, -19);
 
-  setTimeout(() => {
-    if (boxContainer) {
-      boxContainer.classList.remove('shaking');
-      boxContainer.classList.add('open');
-    }
-    
-    // Show Reward Reveal
-    const rewardReveal = document.getElementById('box-reward-reveal');
-    if (rewardReveal) {
-      rewardReveal.classList.add('active');
-    }
+  if (result.success) {
+    setTimeout(() => {
+      if (boxContainer) {
+        boxContainer.classList.remove('shaking');
+        boxContainer.classList.add('open');
+      }
+      
+      // Show Reward Reveal
+      const rewardReveal = document.getElementById('box-reward-reveal');
+      if (rewardReveal) {
+        rewardReveal.classList.add('active');
+      }
 
-    if (boxStatusText) boxStatusText.textContent = "Box Opened!";
-  }, 1500);
+      if (boxStatusText) boxStatusText.textContent = "Box Opened!";
+    }, 1500);
 
-  // Reset Box State after showing reward
-  setTimeout(() => {
-    const boxContainer = document.getElementById('mystery-box-container');
-    const rewardReveal = document.getElementById('box-reward-reveal');
-    
-    if (boxContainer) boxContainer.classList.remove('open');
-    if (rewardReveal) rewardReveal.classList.remove('active');
+    // Reset Box State after showing reward
+    setTimeout(() => {
+      const boxContainer = document.getElementById('mystery-box-container');
+      const rewardReveal = document.getElementById('box-reward-reveal');
+      
+      if (boxContainer) boxContainer.classList.remove('open');
+      if (rewardReveal) rewardReveal.classList.remove('active');
+      if (boxStatusText) boxStatusText.textContent = "Tap to Open!";
+      if (openBtn) openBtn.disabled = false;
+      
+      isOpeningBox = false;
+      showToast("Successfully claimed 190 Coins!", "success");
+    }, 4500);
+  } else {
+    if (boxContainer) boxContainer.classList.remove('shaking');
     if (boxStatusText) boxStatusText.textContent = "Tap to Open!";
     if (openBtn) openBtn.disabled = false;
-    
     isOpeningBox = false;
-    showToast("Successfully claimed 190 Coins!", "success");
-  }, 4500);
+    showToast(result.message || "Failed to open box.", "error");
+  }
 }
 
 // Initialize Redeem Page

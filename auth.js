@@ -7,12 +7,13 @@ function checkAuthState(requireAuth, redirectUrl) {
       if (!requireAuth) {
         window.location.href = redirectUrl;
       }
-    } else {
-      if (requireAuth) {
-        window.location.href = redirectUrl;
-      }
     }
-  });
+  } else {
+    if (requireAuth) {
+      window.location.href = redirectUrl;
+    }
+  }
+});
 }
 
 // Register with Email and Password
@@ -21,7 +22,7 @@ async function registerWithEmail(email, password, username) {
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
     
-    // Create user profile in Realtime Database
+    // Create user profile in Realtime Database with Server Timestamp
     await db.ref('users/' + user.uid).set({
       username: username,
       email: email,
@@ -55,7 +56,7 @@ async function signInWithGoogle() {
     // Check if user already exists in database
     const snapshot = await db.ref('users/' + user.uid).once('value');
     if (!snapshot.exists()) {
-      // Create profile for new Google user
+      // Create profile for new Google user with Server Timestamp
       await db.ref('users/' + user.uid).set({
         username: user.displayName || 'User_' + Math.random().toString(36).substring(2, 7),
         email: user.email,
