@@ -7,13 +7,12 @@ function checkAuthState(requireAuth, redirectUrl) {
       if (!requireAuth) {
         window.location.href = redirectUrl;
       }
+    } else {
+      if (requireAuth) {
+        window.location.href = redirectUrl;
+      }
     }
-  } else {
-    if (requireAuth) {
-      window.location.href = redirectUrl;
-    }
-  }
-});
+  });
 }
 
 // Register with Email and Password
