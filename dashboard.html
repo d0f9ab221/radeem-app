@@ -3,98 +3,240 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Dashboard - Radeem App</title>
+  <title>Radeem App - Premium Rewards</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Desktop Navbar -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
+  <!-- Confetti Canvas for Premium Reward Effects -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <a href="#" class="app-logo">
       <span>🎁</span> Radeem App
     </a>
-    <div class="nav-links">
-      <a href="dashboard.html" class="nav-link active">Dashboard</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button id="logout-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+    <div class="header-actions">
+      <button id="logout-btn" class="header-btn">Logout</button>
     </div>
-  </nav>
+  </header>
 
-  <div class="dashboard-container">
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-      <div class="stat-card coins">
-        <div class="stat-icon">🪙</div>
-        <div class="stat-info">
-          <h3>Coins</h3>
-          <p id="user-coins">0</p>
+  <!-- Main App Container -->
+  <main class="app-container">
+
+    <!-- ================= TAB 1: HOME ================= -->
+    <section id="tab-home" class="tab-content active">
+      <!-- User Greeting -->
+      <div class="user-welcome-section">
+        <div class="user-meta">
+          <div class="user-avatar-container">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <div class="user-level-badge" id="user-level">Lv. 1</div>
+          </div>
+          <div class="user-greeting">
+            <h2 id="user-greeting-name">Hello, Player 👋</h2>
+            <p>Ready to claim your rewards today?</p>
+          </div>
         </div>
       </div>
-      <div class="stat-card diamonds">
-        <div class="stat-icon">💎</div>
-        <div class="stat-info">
-          <h3>Diamonds</h3>
-          <p id="user-diamonds">0</p>
+
+      <!-- Balances Grid -->
+      <div class="balances-grid">
+        <div class="balance-card coins">
+          <div class="balance-icon-wrapper">🪙</div>
+          <div class="balance-info">
+            <h3>Coins</h3>
+            <p id="user-coins">0</p>
+          </div>
+        </div>
+        <div class="balance-card diamonds">
+          <div class="balance-icon-wrapper">💎</div>
+          <div class="balance-info">
+            <h3>Diamonds</h3>
+            <p id="user-diamonds">0</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Main Grid -->
-    <div class="main-grid">
-      <!-- Watch Ads Card -->
-      <div class="action-card">
-        <div class="card-header-info">
-          <div class="card-badge-icon">📺</div>
-          <h2>Watch Ads</h2>
-          <p>Watch a short video ad to earn 1 Diamond instantly.</p>
+      <!-- Reward Progress Card -->
+      <div class="progress-card">
+        <div class="progress-header">
+          <h4>Redeem Progress</h4>
+          <span id="progress-percent">0%</span>
         </div>
-        <button id="watch-ad-btn" class="btn btn-primary">Watch Ad (+1 💎)</button>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <p id="progress-desc">Earn 900 Coins to unlock a 10 RS Google Play Code!</p>
+      </div>
+
+      <!-- Daily Bonus Card -->
+      <div class="daily-bonus-card">
+        <h3>Daily Check-In</h3>
+        <p>Claim free coins every day to boost your progress!</p>
+        <div class="daily-grid">
+          <div class="daily-day active" data-day="1">D1</div>
+          <div class="daily-day" data-day="2">D2</div>
+          <div class="daily-day" data-day="3">D3</div>
+          <div class="daily-day" data-day="4">D4</div>
+          <div class="daily-day" data-day="5">D5</div>
+          <div class="daily-day" data-day="6">D6</div>
+          <div class="daily-day" data-day="7">D7</div>
+        </div>
+      </div>
+
+      <!-- Activity Statistics -->
+      <h4 class="stats-section-title">📊 Your Statistics</h4>
+      <div class="stats-grid">
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">📺</div>
+          <div class="stat-mini-info">
+            <h5>Ads Watched</h5>
+            <p id="stat-ads">0</p>
+          </div>
+        </div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">📦</div>
+          <div class="stat-mini-info">
+            <h5>Boxes Opened</h5>
+            <p id="stat-boxes">0</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 2: EARN (WATCH ADS) ================= -->
+    <section id="tab-earn" class="tab-content">
+      <div class="ad-hero-card">
+        <div class="ad-illustration">📺</div>
+        <h2>Watch Sponsor Ads</h2>
+        <p>Watch a short promotional video to earn 1 Diamond instantly. Use diamonds to unlock premium mystery boxes!</p>
+        <button id="watch-ad-btn" class="btn btn-primary" style="font-size: 1.1rem; padding: 1.2rem;">
+          Watch Video Ad (+1 💎)
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: MYSTERY BOX ================= -->
+    <section id="tab-mystery" class="tab-content">
+      <!-- Rarity Selector -->
+      <div class="rarity-tabs">
+        <button class="rarity-tab-btn active" data-rarity="bronze">Bronze</button>
+        <button class="rarity-tab-btn" data-rarity="silver">Silver</button>
+        <button class="rarity-tab-btn" data-rarity="gold">Gold</button>
       </div>
 
       <!-- Mystery Box Card -->
-      <div class="action-card mystery-card">
-        <div class="card-header-info">
-          <div class="card-badge-icon">📦</div>
-          <h2>Mystery Box</h2>
-          <p>Spend 19 Diamonds to open the Mystery Box and get 190 Coins!</p>
-        </div>
+      <div class="mystery-box-card">
+        <h2 id="box-title">Bronze Mystery Box</h2>
+        <span class="rarity-tag bronze" id="box-rarity-tag">Bronze</span>
+        
         <div class="mystery-box-container">
-          <div id="mystery-box" class="mystery-box"></div>
+          <div id="mystery-box" class="mystery-box bronze"></div>
         </div>
-        <button id="open-box-btn" class="btn btn-primary" style="background: var(--accent);">Open Box (19 💎)</button>
-      </div>
 
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;" id="box-description">
+          Spend 5 Diamonds to open and get 40 Coins!
+        </p>
+        
+        <button id="open-box-btn" class="btn btn-primary" style="background: var(--primary-gradient);">
+          Open Box (<span id="box-cost-text">5</span> 💎)
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: REDEEM & HISTORY ================= -->
+    <section id="tab-redeem" class="tab-content">
       <!-- Redeem Card -->
-      <div class="action-card">
-        <div class="card-header-info">
-          <div class="card-badge-icon">🎟️</div>
-          <h2>Redeem Code</h2>
-          <p>Exchange 900 Coins for a 10 RS Google Play Redeem Code.</p>
-        </div>
-        <button id="redeem-btn" class="btn btn-primary" style="background: var(--success);">Redeem 10 RS (900 🪙)</button>
+      <div class="redeem-hero-card">
+        <div class="redeem-illustration">🎟️</div>
+        <h2>Google Play Redeem Code</h2>
+        <p>Exchange 900 Coins for a 10 RS Google Play Gift Card instantly.</p>
+        <button id="redeem-btn" class="btn btn-primary" style="background: var(--success-gradient);">
+          Redeem 10 RS (900 🪙)
+        </button>
       </div>
-    </div>
-  </div>
 
-  <!-- Mobile Bottom Navigation -->
-  <div class="bottom-nav">
-    <a href="dashboard.html" class="bottom-nav-item active">
-      <span class="bottom-nav-icon">⚡</span>
-      <span class="bottom-nav-label">Earn</span>
+      <!-- History Card -->
+      <div class="history-card">
+        <h3><span>🎟️</span> Redeem History</h3>
+        <div id="history-list" class="history-list">
+          <p style="color: var(--text-muted); text-align: center; padding: 2rem 0; font-size: 0.9rem;">No redeemed codes yet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 5: PROFILE ================= -->
+    <section id="tab-profile" class="tab-content">
+      <div class="profile-hero-card">
+        <div class="profile-avatar-large" id="profile-avatar-large">U</div>
+        <h2 id="profile-username">Loading...</h2>
+        <p id="profile-email">loading...</p>
+
+        <div class="profile-stats-row">
+          <div class="profile-stat-item">
+            <h4 id="profile-coins">0</h4>
+            <span>Coins</span>
+          </div>
+          <div class="profile-stat-item">
+            <h4 id="profile-diamonds">0</h4>
+            <span>Diamonds</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="achievements-card">
+        <h3>🏆 Achievements</h3>
+        <div class="badges-grid">
+          <div class="badge-item" id="badge-first-ad">
+            <div class="badge-icon">🎬</div>
+            <h5>First Ad</h5>
+            <p>Watch 1st ad</p>
+          </div>
+          <div class="badge-item locked" id="badge-box-opener">
+            <div class="badge-icon">📦</div>
+            <h5>Box Opener</h5>
+            <p>Open 5 boxes</p>
+          </div>
+          <div class="badge-item locked" id="badge-redeemer">
+            <div class="badge-icon">👑</div>
+            <h5>Redeemer</h5>
+            <p>Claim 1 code</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="#" class="bottom-nav-item active" data-tab="home">
+      <span class="bottom-nav-icon">🏠</span>
+      <span>Home</span>
     </a>
-    <a href="profile.html" class="bottom-nav-item">
+    <a href="#" class="bottom-nav-item" data-tab="earn">
+      <span class="bottom-nav-icon">📺</span>
+      <span>Earn</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-tab="mystery">
+      <span class="bottom-nav-icon">📦</span>
+      <span>Box</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-tab="redeem">
+      <span class="bottom-nav-icon">🎟️</span>
+      <span>Redeem</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-tab="profile">
       <span class="bottom-nav-icon">👤</span>
-      <span class="bottom-nav-label">Profile</span>
+      <span>Profile</span>
     </a>
-    <a href="#" id="mobile-logout-btn" class="bottom-nav-item">
-      <span class="bottom-nav-icon">🚪</span>
-      <span class="bottom-nav-label">Logout</span>
-    </a>
-  </div>
+  </nav>
 
   <!-- Ad Modal -->
   <div id="ad-modal" class="modal">
@@ -133,12 +275,21 @@
     let currentUser = null;
     let userCoins = 0;
     let userDiamonds = 0;
+    let adsWatched = 0;
+    let boxesOpened = 0;
+
+    // Mystery Box Configs
+    const boxConfigs = {
+      bronze: { cost: 5, reward: 40, title: 'Bronze Mystery Box', desc: 'Spend 5 Diamonds to open and get 40 Coins!' },
+      silver: { cost: 12, reward: 110, title: 'Silver Mystery Box', desc: 'Spend 12 Diamonds to open and get 110 Coins!' },
+      gold: { cost: 19, reward: 190, title: 'Gold Mystery Box', desc: 'Spend 19 Diamonds to open and get 190 Coins!' }
+    };
+    let selectedRarity = 'bronze';
 
     const toast = document.getElementById('toast');
     const userCoinsEl = document.getElementById('user-coins');
     const userDiamondsEl = document.getElementById('user-diamonds');
     const logoutBtn = document.getElementById('logout-btn');
-    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
     function showToast(message, isError = false) {
       toast.textContent = message;
@@ -147,7 +298,55 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Auth Guard
+    // Confetti Effect
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      let particles = [];
+      const colors = ['#5B5BFF', '#7C4DFF', '#00D4FF', '#00C853', '#FFD700'];
+
+      for (let i = 0; i < 100; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * canvas.height,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10 - 5,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+          tiltAngle: 0
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, index) => {
+          p.tiltAngle += p.tiltAngleIncremental;
+          p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+          p.x += Math.sin(p.tiltAngle);
+          p.tilt = Math.sin(p.tiltAngle - index / 3) * 15;
+
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        });
+
+        if (particles.some(p => p.y < canvas.height)) {
+          requestAnimationFrame(draw);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      draw();
+    }
+
+    // Auth Guard & Data Sync
     checkAuthState(async (user) => {
       if (!user) {
         window.location.href = 'index.html';
@@ -157,15 +356,87 @@
         if (data) {
           userCoins = data.coins || 0;
           userDiamonds = data.diamonds || 0;
-          updateUI();
+          adsWatched = data.adsWatched || 0;
+          boxesOpened = data.boxesOpened || 0;
+          updateUI(data);
         }
       }
     });
 
-    function updateUI() {
+    function updateUI(data = {}) {
+      // Update Coins & Diamonds
       userCoinsEl.textContent = userCoins;
       userDiamondsEl.textContent = userDiamonds;
+      document.getElementById('profile-coins').textContent = userCoins;
+      document.getElementById('profile-diamonds').textContent = userDiamonds;
+
+      // Update Progress Bar
+      const progressPercent = Math.min(Math.round((userCoins / 900) * 100), 100);
+      document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+      document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+      // Update Level System
+      const calculatedLevel = Math.floor(userCoins / 300) + 1;
+      document.getElementById('user-level').textContent = `Lv. ${calculatedLevel}`;
+
+      // Update Profile Info
+      const username = data.username || currentUser?.displayName || 'Player';
+      document.getElementById('user-greeting-name').textContent = `Hello, ${username} 👋`;
+      document.getElementById('profile-username').textContent = username;
+      document.getElementById('profile-email').textContent = data.email || currentUser?.email || 'guest@radeem.app';
+      document.getElementById('user-avatar').textContent = username.charAt(0).toUpperCase();
+      document.getElementById('profile-avatar-large').textContent = username.charAt(0).toUpperCase();
+
+      // Update Stats
+      document.getElementById('stat-ads').textContent = adsWatched;
+      document.getElementById('stat-boxes').textContent = boxesOpened;
+
+      // Update Achievements
+      if (adsWatched >= 1) {
+        document.getElementById('badge-first-ad').classList.remove('locked');
+      }
+      if (boxesOpened >= 5) {
+        document.getElementById('badge-box-opener').classList.remove('locked');
+      }
+      if (data.redeemedCodes && Object.keys(data.redeemedCodes).length >= 1) {
+        document.getElementById('badge-redeemer').classList.remove('locked');
+      }
+
+      // Load History
+      const historyList = document.getElementById('history-list');
+      if (data.redeemedCodes) {
+        historyList.innerHTML = '';
+        Object.values(data.redeemedCodes).reverse().forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'history-item';
+          div.innerHTML = `
+            <div class="history-item-info">
+              <h4>${item.amount} Code</h4>
+              <span>${new Date(item.date).toLocaleDateString()}</span>
+            </div>
+            <div class="code-badge">${item.code}</div>
+          `;
+          historyList.appendChild(div);
+        });
+      }
     }
+
+    // SPA Tab Switching Logic
+    const navItems = document.querySelectorAll('.bottom-nav-item');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetTab = item.getAttribute('data-tab');
+
+        navItems.forEach(nav => nav.classList.remove('active'));
+        tabContents.forEach(tab => tab.classList.remove('active'));
+
+        item.classList.add('active');
+        document.getElementById(`tab-${targetTab}`).classList.add('active');
+      });
+    });
 
     // Logout
     async function handleLogout() {
@@ -173,10 +444,6 @@
       window.location.href = 'index.html';
     }
     logoutBtn.addEventListener('click', handleLogout);
-    mobileLogoutBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleLogout();
-    });
 
     // Watch Ad Logic
     const watchAdBtn = document.getElementById('watch-ad-btn');
@@ -203,19 +470,50 @@
 
     claimAdRewardBtn.addEventListener('click', async () => {
       userDiamonds += 1;
+      adsWatched += 1;
       await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
-      updateUI();
+      
+      // Save stats to Firebase
+      if (currentUser) {
+        const data = await getUserData(currentUser.uid);
+        updateUI({ ...data, adsWatched });
+      }
+
       adModal.style.display = 'none';
-      showToast('You earned 1 Diamond!');
+      triggerConfetti();
+      showToast('🎉 You earned 1 Diamond!');
     });
 
-    // Mystery Box Logic
-    const openBoxBtn = document.getElementById('open-box-btn');
+    // Mystery Box Rarity Selector
+    const rarityBtns = document.querySelectorAll('.rarity-tab-btn');
     const mysteryBox = document.getElementById('mystery-box');
 
+    rarityBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        rarityBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        selectedRarity = btn.getAttribute('data-rarity');
+        const config = boxConfigs[selectedRarity];
+
+        // Update Box UI
+        document.getElementById('box-title').textContent = config.title;
+        document.getElementById('box-rarity-tag').textContent = selectedRarity;
+        document.getElementById('box-rarity-tag').className = `rarity-tag ${selectedRarity}`;
+        document.getElementById('box-description').textContent = config.desc;
+        document.getElementById('box-cost-text').textContent = config.cost;
+        
+        mysteryBox.className = `mystery-box ${selectedRarity}`;
+      });
+    });
+
+    // Open Mystery Box Logic
+    const openBoxBtn = document.getElementById('open-box-btn');
+
     openBoxBtn.addEventListener('click', async () => {
-      if (userDiamonds < 19) {
-        showToast('You need 19 Diamonds to open the Mystery Box!', true);
+      const config = boxConfigs[selectedRarity];
+      if (userDiamonds < config.cost) {
+        showToast(`You need ${config.cost} Diamonds to open this box!`, true);
         return;
       }
 
@@ -226,17 +524,23 @@
         mysteryBox.classList.remove('shake');
         mysteryBox.classList.add('open');
         
-        userDiamonds -= 19;
-        userCoins += 190;
+        userDiamonds -= config.cost;
+        userCoins += config.reward;
+        boxesOpened += 1;
+        
         await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
-        updateUI();
-        showToast('🎉 You opened the box and got 190 Coins!');
+        
+        const data = await getUserData(currentUser.uid);
+        updateUI({ ...data, boxesOpened });
+        
+        triggerConfetti();
+        showToast(`🎉 You opened the box and got ${config.reward} Coins!`);
 
         setTimeout(() => {
           mysteryBox.classList.remove('open');
           openBoxBtn.disabled = false;
         }, 3000);
-      }, 2000); 
+      }, 2000);
     });
 
     // Redeem Logic
@@ -254,7 +558,6 @@
 
       userCoins -= 900;
       await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
-      updateUI();
 
       // Generate random code
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -267,8 +570,12 @@
       }
 
       await addRedeemedCode(currentUser.uid, code, '10 RS');
+      const data = await getUserData(currentUser.uid);
+      updateUI(data);
+
       generatedCodeEl.textContent = code;
       redeemModal.style.display = 'flex';
+      triggerConfetti();
     });
 
     closeRedeemModal.addEventListener('click', () => {
@@ -278,6 +585,22 @@
     copyCodeBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(generatedCodeEl.textContent);
       showToast('Code copied to clipboard!');
+    });
+
+    // Daily Bonus Claim Logic
+    const dailyDays = document.querySelectorAll('.daily-day');
+    dailyDays.forEach(day => {
+      day.addEventListener('click', async () => {
+        if (day.classList.contains('claimed')) return;
+        
+        day.classList.add('claimed');
+        userCoins += 15;
+        await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
+        const data = await getUserData(currentUser.uid);
+        updateUI(data);
+        triggerConfetti();
+        showToast('🎉 Claimed 15 Daily Bonus Coins!');
+      });
     });
   </script>
 </body>
