@@ -3,6 +3,18 @@ let currentUser = null;
 let userSyncRef = null;
 let historySyncRef = null;
 
+// Helper to detect current page robustly across different environments
+function getCurrentPage() {
+  const path = window.location.pathname.toLowerCase();
+  if (path.includes('redeem')) return 'redeem';
+  if (path.includes('profile')) return 'profile';
+  if (path.includes('login')) return 'login';
+  if (path.includes('register')) return 'register';
+  if (path.includes('forgot-password')) return 'forgot-password';
+  if (path.includes('dashboard') || path.endsWith('/') || path.includes('index')) return 'dashboard';
+  return 'dashboard';
+}
+
 // Initialize App State
 document.addEventListener('DOMContentLoaded', () => {
   auth.onAuthStateChanged((user) => {
@@ -10,10 +22,20 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = user;
       initializeUI(user);
     } else {
+      // Clean up listeners on logout
+      if (userSyncRef) {
+        userSyncRef.off();
+        userSyncRef = null;
+      }
+      if (historySyncRef) {
+        historySyncRef.off();
+        historySyncRef = null;
+      }
+      
       // If on a protected page, redirect to login
       const publicPages = ['login.html', 'register.html', 'forgot-password.html'];
-      const currentPage = window.location.pathname.split('/').pop();
-      if (!publicPages.includes(currentPage) && currentPage !== '') {
+      const page = getCurrentPage();
+      if (page !== 'login' && page !== 'register' && page !== 'forgot-password') {
         window.location.href = 'login.html';
       }
     }
@@ -33,12 +55,12 @@ function initializeUI(user) {
   setupNavigation();
 
   // Page-specific Initializations
-  const currentPage = window.location.pathname.split('/').pop();
-  if (currentPage === 'redeem.html') {
+  const page = getCurrentPage();
+  if (page === 'redeem') {
     initializeRedeemPage(user);
-  } else if (currentPage === 'profile.html') {
+  } else if (page === 'profile') {
     initializeProfilePage(user);
-  } else if (currentPage === 'dashboard.html' || currentPage === '') {
+  } else if (page === 'dashboard') {
     initializeDashboardPage();
   }
 }
@@ -123,15 +145,31 @@ function updateProfileDetails(data, authUser) {
 
 // Setup Navigation Active States
 function setupNavigation() {
-  const currentPage = window.location.pathname.split('/').pop();
+  const page = getCurrentPage();
+  const hash = window.location.hash;
   const navLinks = document.querySelectorAll('.nav-item');
   
   navLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (currentPage === href || (currentPage === '' && href === 'dashboard.html')) {
-      link.classList.add('active');
+    const href = link.getAttribute('href') || '';
+    
+    if (page === 'dashboard') {
+      if (hash === '#earn' && href.includes('#earn')) {
+        link.classList.add('active');
+      } else if (hash === '#box' && href.includes('#box')) {
+        link.classList.add('active');
+      } else if (!hash && href === 'dashboard.html') {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
     } else {
-      link.classList.remove('active');
+      if (page === 'redeem' && href.includes('redeem')) {
+        link.classList.add('active');
+      } else if (page === 'profile' && href.includes('profile')) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
     }
   });
 }
@@ -272,6 +310,11 @@ async function openMysteryBox() {
   }
 }
 
+// Initialize Dashboard Page
+function initializeDashboardPage() {
+  // Dashboard specific setup if needed
+}
+
 // Initialize Redeem Page
 function initializeRedeemPage(user) {
   // Sync Redeem History
@@ -281,20 +324,24 @@ function initializeRedeemPage(user) {
 
     if (requests.length === 0) {
       historyContainer.innerHTML = `
-        <div class="empty-state">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <div class="empty-state" style="text-align: center; padding: 40px 20px;">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 12px;">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
-          <p>No redeem history found.</p>
+          <p style="color: var(--text-muted); font-weight: 600;">No redeem history found.</p>
         </div>
       `;
       return;
     }
 
     historyContainer.innerHTML = requests.map(req => {
-      const date = new Date(req.createdAt).toLocaleDateString();
+      const date = new Date(req.createdAt).toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
       const statusClass = req.status === 'pending' ? 'status-pending' : 'status-approved';
       return `
         <div class="history-card">
@@ -323,7 +370,10 @@ async function processRedeem() {
   }
 
   const redeemBtn = document.getElementById('redeem-btn');
-  if (redeemBtn) redeemBtn.disabled = true;
+  if (redeemBtn) {
+    redeemBtn.disabled = true;
+    redeemBtn.textContent = "Processing...";
+  }
 
   const result = await createRedeemRequest(currentUser.uid, currentUser.email, 900, 10);
   
@@ -333,7 +383,10 @@ async function processRedeem() {
     showToast(result.message || "Redeem failed. Try again.", "error");
   }
 
-  if (redeemBtn) redeemBtn.disabled = false;
+  if (redeemBtn) {
+    redeemBtn.disabled = false;
+    redeemBtn.textContent = "Redeem Now";
+  }
 }
 
 // Initialize Profile Page
