@@ -13,9 +13,21 @@ const firebaseConfig = {
   measurementId: "G-GVEB9G3V95"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-const googleProvider = new GoogleAuthProvider();
+let app = null;
+let auth = null;
+let db = null;
+let googleProvider = null;
+let isFirebaseAvailable = false;
 
-export { auth, db, googleProvider };
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getDatabase(app);
+  googleProvider = new GoogleAuthProvider();
+  isFirebaseAvailable = true;
+} catch (error) {
+  console.warn("Firebase failed to initialize. Switching to local simulation mode for previewer.", error);
+  isFirebaseAvailable = false;
+}
+
+export { auth, db, googleProvider, isFirebaseAvailable };

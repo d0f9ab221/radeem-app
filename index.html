@@ -44,6 +44,11 @@
         <button type="submit" class="btn btn-primary">Log In</button>
       </form>
 
+      <button id="guest-login-btn" class="btn btn-guest">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Play as Guest
+      </button>
+
       <div class="divider">or</div>
 
       <button id="google-signin-btn" class="btn btn-google">
@@ -60,65 +65,12 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
-  <script type="module">
-    import { loginUser, loginWithGoogle, resetPassword, checkAuthState } from './auth.js';
-
-    const loginForm = document.getElementById('login-form');
-    const googleBtn = document.getElementById('google-signin-btn');
-    const forgotLink = document.getElementById('forgot-password-link');
-    const toast = document.getElementById('toast');
-
-    function showToast(message, isError = false) {
-      toast.textContent = message;
-      toast.style.borderLeft = isError ? '4px solid var(--danger)' : '4px solid var(--success)';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    checkAuthState((user) => {
-      if (user) {
-        window.location.href = 'dashboard.html';
-      } 
-    });
-
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      const res = await loginUser(email, password);
-      if (res.success) {
-        showToast('Login successful! Redirecting...');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else {
-        showToast(res.error, true);
-      }
-    });
-
-    googleBtn.addEventListener('click', async () => {
-      const res = await loginWithGoogle();
-      if (res.success) {
-        showToast('Google Login successful!');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else { 
-        showToast(res.error, true);
-      }
-    });
-
-    forgotLink.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      if (!email) {
-        showToast('Please enter your email address first.', true);
-        return;
-      }
-      const res = await resetPassword(email);
-      if (res.success) {
-        showToast('Password reset email sent!');
-      } else {
-        showToast(res.error, true);
-      }
-    });
-  </script>
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
+  <!-- Unified App Script -->
+  <script src="script.js"></script>
 </body>
 </html>
