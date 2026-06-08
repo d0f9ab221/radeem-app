@@ -165,7 +165,7 @@ body {
 
 .auth-illustration {
     position: relative;
-    width: 160px;
+    width: 160px; 
     height: 160px;
     margin: 10px 0;
     display: flex;
@@ -371,7 +371,7 @@ body {
     gap: 6px;
 }
 
-.tab-btn.active {
+.tab-btn.active { 
     background: var(--card-bg);
     color: var(--primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);

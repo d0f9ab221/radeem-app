@@ -3,7 +3,8 @@ let state = {
     user: null,
     coins: 0,
     diamonds: 19, // Start with 19 so they can try immediately!
-    history: []
+    history: [],
+    loaded: false // Guard flag to prevent overwriting server data with defaults
 };
 
 // Security Splitting for Sensitive Credentials
@@ -88,12 +89,18 @@ const adModal = document.getElementById('ad-modal');
 const adTimerEl = document.getElementById('ad-timer');
 const historyList = document.getElementById('history-list');
 const toast = document.getElementById('toast');
+const qrCodeImg = document.getElementById('qr-code-img');
 
 let isOpening = false;
 
 // Initialize App
 function init() {
     initFirebase();
+    
+    // Dynamically set QR code to current URL for desktop blocker
+    if (qrCodeImg) {
+        qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href)}`;
+    }
     
     if (isFirebaseActive) {
         // Listen for Auth State Changes
@@ -109,6 +116,7 @@ function init() {
         const demoUser = localStorage.getItem('radeem_demo_user');
         if (demoUser) {
             state.user = JSON.parse(demoUser);
+            state.loaded = true;
             loadDemoData();
             showApp();
         } else {
@@ -119,11 +127,12 @@ function init() {
 
 // Handle Real Firebase Login
 function handleUserLogin(user) {
-    state.user = { 
+    state.user = {
         uid: user.uid,
         displayName: user.displayName || "Radeemer",
-        photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style" 
+        photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style"
     };
+    state.loaded = false; // Reset loaded state until Firestore returns data
 
     // Sync with Firestore in real-time
     const userRef = db.collection('users').doc(user.uid);
@@ -144,6 +153,7 @@ function handleUserLogin(user) {
             state.diamonds = 19;
             state.history = [];
         }
+        state.loaded = true; // Mark as fully loaded from server
         updateUI();
         renderHistory();
     }, error => {
@@ -156,7 +166,13 @@ function handleUserLogin(user) {
 
 // Handle Real Firebase Logout
 function handleUserLogout() {
-    state.user = null;
+    state = {
+        user: null,
+        coins: 0,
+        diamonds: 19,
+        history: [],
+        loaded: false
+    };
     hideApp();
 }
 
@@ -165,6 +181,7 @@ function loadDemoData() {
     state.coins = parseInt(localStorage.getItem('radeem_coins')) || 0;
     state.diamonds = parseInt(localStorage.getItem('radeem_diamonds')) || 19;
     state.history = JSON.parse(localStorage.getItem('radeem_history')) || [];
+    state.loaded = true;
     updateUI();
     renderHistory();
 }
@@ -217,12 +234,13 @@ function loginWithGoogle() {
         // Simulated Google Sign-In for Demo Mode
         showToast("🚀 Running in Demo Mode (No Firebase Config)");
         setTimeout(() => {
-            const mockUser = {
+            const mockUser = { 
                 uid: "demo_user_123",
                 displayName: "Demo User",
                 photoURL: "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style"
             };
             state.user = mockUser;
+            state.loaded = true;
             localStorage.setItem('radeem_demo_user', JSON.stringify(mockUser));
             loadDemoData();
             showApp();
@@ -234,12 +252,26 @@ function loginWithGoogle() {
 // Logout Action
 function logout() {
     if (isFirebaseActive) {
+        // Reset state immediately to prevent any accidental writes or flashes of old data
+        state = {
+            user: null,
+            coins: 0,
+            diamonds: 19,
+            history: [],
+            loaded: false
+        };
         auth.signOut().then(() => {
             showToast("Logged out successfully.");
         });
     } else {
         localStorage.removeItem('radeem_demo_user');
-        state.user = null;
+        state = {
+            user: null,
+            coins: 0,
+            diamonds: 19,
+            history: [],
+            loaded: false
+        };
         hideApp();
         showToast("Logged out from Demo Mode.");
     }
@@ -267,6 +299,11 @@ function switchTab(tabId) {
 // Try to Open Mystery Box
 function tryOpenBox() {
     if (isOpening) return; 
+
+    if (isFirebaseActive && !state.loaded) {
+        showToast("⏳ Loading your account data...");
+        return;
+    }
 
     if (state.diamonds < 19) {
         showToast("❌ Need 19 Diamonds! Watch an ad below.");
@@ -312,6 +349,11 @@ function tryOpenBox() {
 
 // Watch Ad Simulation
 function watchAd() {
+    if (isFirebaseActive && !state.loaded) {
+        showToast("⏳ Loading your account data...");
+        return;
+    }
+
     adModal.classList.add('active');
     let timeLeft = 5;
     adTimerEl.textContent = `${timeLeft}s`;
@@ -334,6 +376,11 @@ function watchAd() {
 
 // Redeem Code Logic
 function redeemCode(provider, cost) {
+    if (isFirebaseActive && !state.loaded) {
+        showToast("⏳ Loading your account data...");
+        return;
+    }
+
     if (state.coins < cost) {
         showToast(`❌ Need ${cost} Coins to redeem!`);
         return;
@@ -362,14 +409,17 @@ function redeemCode(provider, cost) {
 // Helper: Save state to Firestore or LocalStorage
 function saveStateToServerOrLocal() {
     if (isFirebaseActive && state.user) {
-        db.collection('users').doc(state.user.uid).update({
-            coins: state.coins,
-            diamonds: state.diamonds,
-            history: state.history
-        }).catch(err => {
-            console.error("Error updating server state:", err);
-            showToast("⚠️ Server sync failed. Check connection.");
-        });
+        // Only update if state is fully loaded to prevent overwriting with defaults
+        if (state.loaded) {
+            db.collection('users').doc(state.user.uid).update({
+                coins: state.coins,
+                diamonds: state.diamonds,
+                history: state.history
+            }).catch(err => {
+                console.error("Error updating server state:", err);
+                showToast("⚠️ Server sync failed. Check connection.");
+            });
+        }
     } else {
         saveDemoData();
         updateUI();
