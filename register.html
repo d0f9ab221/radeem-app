@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Register - Radeem App</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,20 +10,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-body">
 
   <nav class="navbar">
     <a href="index.html" class="nav-logo">
       <span>🎁</span> Radeem App
     </a>
     <div class="nav-links">
-      <a href="login.html" class="nav-link">Login</a>
+      <a href="index.html" class="nav-link">Login</a>
     </div>
   </nav>
 
-  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+  <div class="auth-wrapper">
     <div class="auth-container">
       <div class="auth-header">
+        <div class="auth-logo-badge">✨</div>
         <h1>Create Account</h1>
         <p>Start earning free redeem codes today</p>
       </div>
@@ -52,7 +53,7 @@
       </button>
 
       <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
-        Already have an account? <a href="login.html" style="color: var(--primary); font-weight: 700; text-decoration: none;">Log In</a>
+        Already have an account? <a href="index.html" style="color: var(--primary); font-weight: 700; text-decoration: none;">Log In</a>
       </p>
     </div>
   </div>

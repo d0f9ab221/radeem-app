@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard - Radeem App</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,7 @@
 </head>
 <body>
 
+  <!-- Desktop Navbar -->
   <nav class="navbar">
     <a href="dashboard.html" class="nav-logo">
       <span>🎁</span> Radeem App
@@ -46,8 +47,8 @@
     <div class="main-grid">
       <!-- Watch Ads Card -->
       <div class="action-card">
-        <div>
-          <div style="font-size: 3rem; margin-bottom: 1rem;">📺</div>
+        <div class="card-header-info">
+          <div class="card-badge-icon">📺</div>
           <h2>Watch Ads</h2>
           <p>Watch a short video ad to earn 1 Diamond instantly.</p>
         </div>
@@ -55,9 +56,9 @@
       </div>
 
       <!-- Mystery Box Card -->
-      <div class="action-card">
-        <div>
-          <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+      <div class="action-card mystery-card">
+        <div class="card-header-info">
+          <div class="card-badge-icon">📦</div>
           <h2>Mystery Box</h2>
           <p>Spend 19 Diamonds to open the Mystery Box and get 190 Coins!</p>
         </div>
@@ -69,8 +70,8 @@
 
       <!-- Redeem Card -->
       <div class="action-card">
-        <div>
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🎟️</div>
+        <div class="card-header-info">
+          <div class="card-badge-icon">🎟️</div>
           <h2>Redeem Code</h2>
           <p>Exchange 900 Coins for a 10 RS Google Play Redeem Code.</p>
         </div>
@@ -79,11 +80,27 @@
     </div>
   </div>
 
+  <!-- Mobile Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="dashboard.html" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">⚡</span>
+      <span class="bottom-nav-label">Earn</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span class="bottom-nav-label">Profile</span>
+    </a>
+    <a href="#" id="mobile-logout-btn" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🚪</span>
+      <span class="bottom-nav-label">Logout</span>
+    </a>
+  </div>
+
   <!-- Ad Modal -->
   <div id="ad-modal" class="modal">
     <div class="modal-content">
       <h2>Watching Sponsor Ad</h2>
-      <p style="margin-bottom: 1.5rem;">Please wait until the ad finishes to claim your reward.</p>
+      <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Please wait until the ad finishes to claim your reward.</p>
       <div class="ad-video-container">
         <img src="https://image.pollinations.ai/prompt/cool%20mobile%20game%20advertisement%20banner%20colorful" alt="Ad">
         <div id="ad-timer" class="ad-timer">15s</div>
@@ -98,8 +115,8 @@
       <button class="modal-close" id="close-redeem-modal">&times;</button>
       <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
       <h2>Redeem Successful!</h2>
-      <p style="margin-bottom: 1.5rem;">Here is your 10 RS Google Play Redeem Code:</p>
-      <div style="background: #f1f5f9; padding: 1rem; border-radius: 12px; font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 1.5rem; color: var(--primary);" id="generated-code">
+      <p style="margin-bottom: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">Here is your 10 RS Google Play Redeem Code:</p>
+      <div style="background: #f1f5f9; padding: 1rem; border-radius: 12px; font-size: 1.3rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 1.5rem; color: var(--primary); word-break: break-all;" id="generated-code">
         GP-XXXX-XXXX-XXXX
       </div>
       <button id="copy-code-btn" class="btn btn-primary">Copy Code</button>
@@ -121,6 +138,7 @@
     const userCoinsEl = document.getElementById('user-coins');
     const userDiamondsEl = document.getElementById('user-diamonds');
     const logoutBtn = document.getElementById('logout-btn');
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
     function showToast(message, isError = false) {
       toast.textContent = message;
@@ -132,7 +150,7 @@
     // Auth Guard
     checkAuthState(async (user) => {
       if (!user) {
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
       } else {
         currentUser = user;
         const data = await getUserData(user.uid);
@@ -150,9 +168,14 @@
     }
 
     // Logout
-    logoutBtn.addEventListener('click', async () => {
+    async function handleLogout() {
       await logoutUser();
-      window.location.href = 'login.html';
+      window.location.href = 'index.html';
+    }
+    logoutBtn.addEventListener('click', handleLogout);
+    mobileLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleLogout();
     });
 
     // Watch Ad Logic
@@ -213,7 +236,7 @@
           mysteryBox.classList.remove('open');
           openBoxBtn.disabled = false;
         }, 3000);
-      }, 2000);
+      }, 2000); 
     });
 
     // Redeem Logic
