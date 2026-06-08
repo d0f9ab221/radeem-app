@@ -6,18 +6,31 @@ let state = {
     history: []
 };
 
-// Firebase Configuration Fallback / Storage
-let firebaseConfig = null;
+// Hardcoded Live Firebase Configuration provided by the user
+const defaultFirebaseConfig = {
+    apiKey: "AIzaSyBhuSxkjcsZ3TtNGYCOXOOl7-WWG_EsgPo",
+    authDomain: "ililbb-70fb0.firebaseapp.com",
+    databaseURL: "https://ililbb-70fb0-default-rtdb.firebaseio.com",
+    projectId: "ililbb-70fb0",
+    storageBucket: "ililbb-70fb0.firebasestorage.app",
+    messagingSenderId: "1059355688483",
+    appId: "1:1059355688483:web:a71b5f3bc4fb31ee86fb96",
+    measurementId: "G-GVEB9G3V95"
+};
+
+let firebaseConfig = defaultFirebaseConfig;
+
+// Check if user has overridden the config via the settings modal
 try {
     const savedConfig = localStorage.getItem('radeem_firebase_config');
     if (savedConfig) {
         firebaseConfig = JSON.parse(savedConfig);
     }
 } catch (e) {
-    console.warn("Failed to parse saved Firebase config", e);
+    console.warn("Failed to parse saved Firebase config, using default.", e);
 }
 
-// Initialize Firebase if config exists
+// Initialize Firebase
 let db = null;
 let auth = null;
 let isFirebaseActive = false;
@@ -32,8 +45,8 @@ function initFirebase() {
             db = firebase.firestore();
             auth = firebase.auth();
             isFirebaseActive = true;
-            console.log("Firebase successfully initialized!");
-        } catch (error) {
+            console.log("Firebase successfully initialized with live server!");
+        } catch (error) { 
             console.error("Firebase initialization error:", error);
             showToast("⚠️ Firebase config error. Running in Demo Mode.");
             isFirebaseActive = false;
@@ -82,7 +95,7 @@ function init() {
             }
         });
     } else {
-        // Demo Mode: Check local storage for simulated session
+        // Demo Mode Fallback: Check local storage for simulated session
         const demoUser = localStorage.getItem('radeem_demo_user');
         if (demoUser) {
             state.user = JSON.parse(demoUser);
@@ -102,7 +115,7 @@ function handleUserLogin(user) {
         photoURL: user.photoURL || "https://image.pollinations.ai/prompt/cute%20avatar%20profile%20picture%20cartoon%20style" 
     };
 
-    // Sync with Firestore
+    // Sync with Firestore in real-time
     const userRef = db.collection('users').doc(user.uid);
     userRef.onSnapshot(doc => {
         if (doc.exists) {
@@ -111,7 +124,7 @@ function handleUserLogin(user) {
             state.diamonds = data.diamonds ?? 19;
             state.history = data.history ?? [];
         } else {
-            // Create new user document on server
+            // Create new user document on server if it doesn't exist
             userRef.set({
                 coins: 0,
                 diamonds: 19,
@@ -125,6 +138,7 @@ function handleUserLogin(user) {
         renderHistory();
     }, error => {
         console.error("Firestore sync error:", error);
+        showToast("⚠️ Firestore permission error. Check your Security Rules!");
     });
 
     showApp();
@@ -174,11 +188,20 @@ function hideApp() {
 function loginWithGoogle() {
     if (isFirebaseActive) {
         const provider = new firebase.auth.GoogleAuthProvider();
+        // Add custom client ID parameter to ensure correct OAuth client mapping
+        provider.setCustomParameters({
+            client_id: '1059355688483-ee9g0rurtbo4k1o5kafkunrot9nkge97.apps.googleusercontent.com'
+        });
+        
         auth.signInWithPopup(provider).then(result => {
             showToast(`👋 Welcome ${result.user.displayName}!`);
         }).catch(error => {
             console.error("Google Sign-In Error:", error);
-            showToast("❌ Sign-In failed. Try again or use Demo Mode.");
+            if (error.code === 'auth/operation-not-allowed') {
+                showToast("❌ Enable Google Sign-In in Firebase Console!");
+            } else {
+                showToast(`❌ Sign-In failed: ${error.message}`);
+            }
         });
     } else {
         // Simulated Google Sign-In for Demo Mode
@@ -250,7 +273,7 @@ function tryOpenBox() {
     mysteryBox.classList.add('shake');
     boxHint.textContent = "Unlocking...";
 
-    setTimeout(() => {
+    setTimeout(() => { 
         mysteryBox.classList.remove('shake');
         
         // 2. Open Animation
@@ -312,7 +335,7 @@ function redeemCode(provider, cost) {
     const generatedCode = generateRandomCode();
     
     // Add to history
-    const newRedemption = { 
+    const newRedemption = {
         id: Date.now(),
         provider: provider,
         code: generatedCode,
@@ -335,6 +358,7 @@ function saveStateToServerOrLocal() {
             history: state.history
         }).catch(err => {
             console.error("Error updating server state:", err);
+            showToast("⚠️ Server sync failed. Check connection.");
         });
     } else {
         saveDemoData();
@@ -412,18 +436,16 @@ function saveFirebaseConfig() {
     const val = configInput.value.trim();
     if (!val) {
         localStorage.removeItem('radeem_firebase_config');
-        showToast("Firebase config cleared. Running in Demo Mode.");
+        showToast("Firebase config cleared. Running with default live server.");
         setTimeout(() => window.location.reload(), 1000);
         return;
     }
 
     try {
-        // Clean up input to make it valid JSON if they pasted a JS object
         let cleanVal = val;
         if (!val.startsWith('{')) {
             throw new Error("Invalid format");
         }
-        // Simple conversion helper if they pasted JS object instead of strict JSON
         cleanVal = val
             .replace(/(\w+)\s*:/g, '"$1":')
             .replace(/'/g, '"')

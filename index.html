@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,14 +9,68 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDKs (Compat Version for easy integration) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="app-container">
+
+    <!-- FIRST PAGE: LOGIN SCREEN -->
+    <div class="auth-container" id="login-screen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span style="font-size: 50px;">🎁</span>
+                <h2>Radeem App</h2>
+                <p>Open mystery boxes, earn coins, and redeem real gift codes instantly!</p>
+            </div>
+
+            <div class="auth-illustration">
+                <div class="floating-box">🎁</div>
+                <div class="floating-coin">
+                    <svg class="coin-svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="#FFD700" stroke="#DAA520" stroke-width="1.5"/>
+                        <circle cx="12" cy="12" r="7" fill="#FFEA6C"/>
+                        <polygon points="12,7 13.5,10.2 17,10.5 14.2,12.8 15.1,16.2 12,14.3 8.9,16.2 9.8,12.8 7,10.5 10.5,10.2" fill="#F39C12"/>
+                    </svg>
+                </div>
+                <div class="floating-diamond">
+                    <svg class="diamond-svg" viewBox="0 0 24 24">
+                        <path d="M12 2L3 9L12 22L21 9L12 2Z" fill="#00D2FC" stroke="#00B4D8" stroke-width="1"/>
+                        <path d="M12 2L7.5 9L12 22L16.5 9L12 2Z" fill="#00B4D8"/>
+                        <path d="M12 5L9.5 9L12 17L14.5 9L12 5Z" fill="#90E0EF"/>
+                    </svg>
+                </div>
+            </div>
+
+            <button class="btn-google" onclick="loginWithGoogle()">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.68 1.54 14.98 1 12 1 7.35 1 3.37 3.67 1.39 7.56l3.89 3.02C6.2 7.62 8.89 5.04 12 5.04z"/>
+                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.73 2.89c2.18-2.01 3.7-4.97 3.7-8.62z"/>
+                    <path fill="#FBBC05" d="M5.28 14.42c-.25-.74-.39-1.53-.39-2.36s.14-1.62.39-2.36L1.39 6.68C.5 8.47 0 10.47 0 12.5s.5 4.03 1.39 5.82l3.89-3.9z"/>
+                    <path fill="#34A853" d="M12 23c3.24 0 5.97-1.08 7.96-2.91l-3.73-2.89c-1.03.69-2.35 1.1-3.93 1.1-3.11 0-5.8-2.58-6.72-5.54l-3.89 3.02C3.37 20.33 7.35 23 12 23z"/>
+                </svg>
+                Sign in with Google
+            </button>
+
+            <div class="auth-footer">
+                <p>By signing in, you agree to our Terms of Service.</p>
+                <button class="btn-config-toggle" onclick="toggleConfigModal()">⚙️ Configure Firebase Server</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER (Hidden until logged in) -->
+    <div class="app-container" id="app-container" style="display: none;">
         <!-- Header / Balance Bar -->
         <header class="app-header">
-            <div class="logo-section">
-                <span class="logo-icon">🎁</span>
-                <h1>Radeem</h1>
+            <div class="user-profile-section">
+                <img src="" alt="Avatar" class="user-avatar" id="user-avatar">
+                <div class="user-meta">
+                    <span class="user-name" id="user-name">Loading...</span>
+                    <button class="btn-logout" onclick="logout()">Sign Out</button>
+                </div>
             </div>
             <div class="balances">
                 <!-- Coin Balance Badge -->
@@ -126,11 +180,10 @@
                             <svg class="card-img" viewBox="0 0 24 24">
                                 <path d="M3 2.5v19c0 .5.4.8.9.5l9.6-9.6-9.6-9.6c-.5-.3-.9 0-.9.7z" fill="#00E676"/>
                                 <path d="M13.5 12.4l3.8 3.8 4.3-2.5c1-.6 1-1.6 0-2.2l-4.3-2.5-3.8 3.4z" fill="#FFC107"/>
-                                <path d="M3.9 22c-.5.3-.9 0-.9-.7v-.3c0 .7.4 1 .9.7l9.6-9.6.1.1-9.7 9.8z" fill="#263238" opacity="0.1"/>
+                                <path d="M3.9 22c-.5.3-.9 0-.9-.7v-.3c0 .7.4 1 .9.7l9.6-9.6.1.1-9.7 9.8z" fill="263238" opacity="0.1"/>
                                 <path d="M3.9 2c-.5-.3-.9 0-.9.7v.3c0-.7.4-1 .9-.7l9.6 9.6-.1-.1L3.9 2z" fill="#FFFFFF" opacity="0.12"/>
-                                <path d="M13.5 12.4l-9.6-9.6c-.5-.3-.9 0-.9.7v.2c0-.7.4-1 .9-.7l9.6 9.4.1-.1z" fill="#FFFFFF" opacity="0.1"/>
                                 <path d="M13.5 11.6l3.8-3.4 4.3 2.5c.5.3.8.7.8 1.1 0-.4-.3-.8-.8-1.1l-4.3-2.5-3.8 3.4z" fill="#FFFFFF" opacity="0.12"/>
-                                <path d="M17.3 16.2l-3.8-3.8-.1.1 3.8 3.8c.5.3.8.1.8-.5v-.2c0 .6-.3.8-.8.6z" fill="#263238" opacity="0.1"/>
+                                <path d="M17.3 16.2l-3.8-3.8-.1.1 3.8 3.8c.5.3.8.1.8-.5v-.2c0 .6-.3.8-.8.6z" fill="263238" opacity="0.1"/>
                                 <path d="M21.6 10.9l-4.3-2.5-3.8 3.4 3.8 3.8 4.3-2.5c1-.6 1-1.6 0-2.2z" fill="#FF3D00"/>
                                 <path d="M13.5 11.6L3.9 2c-.5-.3-.9 0-.9.7v18.6c0 .7.4 1 .9.7l9.6-9.6z" fill="#00B0FF"/>
                             </svg>
@@ -205,6 +258,27 @@
                 <p>Loading high-paying video ad...</p>
                 <span class="ad-reward-hint">Do not close to receive 19 Diamonds!</span>
             </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE CONFIG MODAL -->
+    <div class="modal-overlay" id="config-modal">
+        <div class="config-card">
+            <h3>⚙️ Firebase Server Configuration</h3>
+            <p>Paste your Firebase Web App Config JSON below to connect this app to your live server database and enable real Google Sign-In.</p>
+            <textarea id="firebase-config-input" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "your-app.firebaseapp.com",
+  "projectId": "your-app",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+            <div class="config-actions">
+                <button class="btn btn-primary" onclick="saveFirebaseConfig()">Save & Connect</button>
+                <button class="btn" style="background: #eee; color: #333;" onclick="toggleConfigModal()">Cancel</button>
+            </div>
+            <p class="config-help">Leave empty and save to reset back to Demo Mode.</p>
         </div>
     </div>
 
