@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Radeem App</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="dashboard.html" class="nav-logo">
+      <span>🎁</span> Radeem App
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="profile.html" class="nav-link">Profile</a>
+      <button id="logout-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+    </div>
+  </nav>
+
+  <div class="dashboard-container">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card coins">
+        <div class="stat-icon">🪙</div>
+        <div class="stat-info">
+          <h3>Coins</h3>
+          <p id="user-coins">0</p>
+        </div>
+      </div>
+      <div class="stat-card diamonds">
+        <div class="stat-icon">💎</div>
+        <div class="stat-info">
+          <h3>Diamonds</h3>
+          <p id="user-diamonds">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Watch Ads Card -->
+      <div class="action-card">
+        <div>
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📺</div>
+          <h2>Watch Ads</h2>
+          <p>Watch a short video ad to earn 1 Diamond instantly.</p>
+        </div>
+        <button id="watch-ad-btn" class="btn btn-primary">Watch Ad (+1 💎)</button>
+      </div>
+
+      <!-- Mystery Box Card -->
+      <div class="action-card">
+        <div>
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+          <h2>Mystery Box</h2>
+          <p>Spend 19 Diamonds to open the Mystery Box and get 190 Coins!</p>
+        </div>
+        <div class="mystery-box-container">
+          <div id="mystery-box" class="mystery-box"></div>
+        </div>
+        <button id="open-box-btn" class="btn btn-primary" style="background: var(--accent);">Open Box (19 💎)</button>
+      </div>
+
+      <!-- Redeem Card -->
+      <div class="action-card">
+        <div>
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🎟️</div>
+          <h2>Redeem Code</h2>
+          <p>Exchange 900 Coins for a 10 RS Google Play Redeem Code.</p>
+        </div>
+        <button id="redeem-btn" class="btn btn-primary" style="background: var(--success);">Redeem 10 RS (900 🪙)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ad Modal -->
+  <div id="ad-modal" class="modal">
+    <div class="modal-content">
+      <h2>Watching Sponsor Ad</h2>
+      <p style="margin-bottom: 1.5rem;">Please wait until the ad finishes to claim your reward.</p>
+      <div class="ad-video-container">
+        <img src="https://image.pollinations.ai/prompt/cool%20mobile%20game%20advertisement%20banner%20colorful" alt="Ad">
+        <div id="ad-timer" class="ad-timer">15s</div>
+      </div>
+      <button id="claim-ad-reward-btn" class="btn btn-primary" disabled>Claim Reward</button>
+    </div>
+  </div>
+
+  <!-- Redeem Success Modal -->
+  <div id="redeem-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="close-redeem-modal">&times;</button>
+      <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+      <h2>Redeem Successful!</h2>
+      <p style="margin-bottom: 1.5rem;">Here is your 10 RS Google Play Redeem Code:</p>
+      <div style="background: #f1f5f9; padding: 1rem; border-radius: 12px; font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 1.5rem; color: var(--primary);" id="generated-code">
+        GP-XXXX-XXXX-XXXX
+      </div>
+      <button id="copy-code-btn" class="btn btn-primary">Copy Code</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { checkAuthState, logoutUser } from './auth.js';
+    import { getUserData, updateUserCurrency, addRedeemedCode } from './database.js';
+
+    let currentUser = null;
+    let userCoins = 0;
+    let userDiamonds = 0;
+
+    const toast = document.getElementById('toast');
+    const userCoinsEl = document.getElementById('user-coins');
+    const userDiamondsEl = document.getElementById('user-diamonds');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    function showToast(message, isError = false) {
+      toast.textContent = message;
+      toast.style.borderLeft = isError ? '4px solid var(--danger)' : '4px solid var(--success)';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Auth Guard
+    checkAuthState(async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+      } else {
+        currentUser = user;
+        const data = await getUserData(user.uid);
+        if (data) {
+          userCoins = data.coins || 0;
+          userDiamonds = data.diamonds || 0;
+          updateUI();
+        }
+      }
+    });
+
+    function updateUI() {
+      userCoinsEl.textContent = userCoins;
+      userDiamondsEl.textContent = userDiamonds;
+    }
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+      await logoutUser();
+      window.location.href = 'login.html';
+    });
+
+    // Watch Ad Logic
+    const watchAdBtn = document.getElementById('watch-ad-btn');
+    const adModal = document.getElementById('ad-modal');
+    const adTimerEl = document.getElementById('ad-timer');
+    const claimAdRewardBtn = document.getElementById('claim-ad-reward-btn');
+
+    watchAdBtn.addEventListener('click', () => {
+      adModal.style.display = 'flex';
+      let timeLeft = 15;
+      claimAdRewardBtn.disabled = true;
+      claimAdRewardBtn.textContent = 'Claim Reward';
+      
+      const interval = setInterval(() => {
+        timeLeft--;
+        adTimerEl.textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          adTimerEl.textContent = 'Done!';
+          claimAdRewardBtn.disabled = false;
+        }
+      }, 1000);
+    });
+
+    claimAdRewardBtn.addEventListener('click', async () => {
+      userDiamonds += 1;
+      await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
+      updateUI();
+      adModal.style.display = 'none';
+      showToast('You earned 1 Diamond!');
+    });
+
+    // Mystery Box Logic
+    const openBoxBtn = document.getElementById('open-box-btn');
+    const mysteryBox = document.getElementById('mystery-box');
+
+    openBoxBtn.addEventListener('click', async () => {
+      if (userDiamonds < 19) {
+        showToast('You need 19 Diamonds to open the Mystery Box!', true);
+        return;
+      }
+
+      openBoxBtn.disabled = true;
+      mysteryBox.classList.add('shake');
+
+      setTimeout(async () => {
+        mysteryBox.classList.remove('shake');
+        mysteryBox.classList.add('open');
+        
+        userDiamonds -= 19;
+        userCoins += 190;
+        await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
+        updateUI();
+        showToast('🎉 You opened the box and got 190 Coins!');
+
+        setTimeout(() => {
+          mysteryBox.classList.remove('open');
+          openBoxBtn.disabled = false;
+        }, 3000);
+      }, 2000);
+    });
+
+    // Redeem Logic
+    const redeemBtn = document.getElementById('redeem-btn');
+    const redeemModal = document.getElementById('redeem-modal');
+    const closeRedeemModal = document.getElementById('close-redeem-modal');
+    const generatedCodeEl = document.getElementById('generated-code');
+    const copyCodeBtn = document.getElementById('copy-code-btn');
+
+    redeemBtn.addEventListener('click', async () => {
+      if (userCoins < 900) {
+        showToast('You need 900 Coins to redeem a 10 RS code!', true);
+        return;
+      }
+
+      userCoins -= 900;
+      await updateUserCurrency(currentUser.uid, userCoins, userDiamonds);
+      updateUI();
+
+      // Generate random code
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = 'GP-';
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        if (i < 3) code += '-';
+      }
+
+      await addRedeemedCode(currentUser.uid, code, '10 RS');
+      generatedCodeEl.textContent = code;
+      redeemModal.style.display = 'flex';
+    });
+
+    closeRedeemModal.addEventListener('click', () => {
+      redeemModal.style.display = 'none';
+    });
+
+    copyCodeBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(generatedCodeEl.textContent);
+      showToast('Code copied to clipboard!');
+    });
+  </script>
+</body>
+</html>

@@ -1,272 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radeem - Earn & Redeem Codes</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
-    <!-- Google Fonts & Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radeem App - Earn Free Redeem Codes</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 font-['Poppins'] text-slate-800 min-h-screen flex flex-col">
+<body>
 
-    <!-- Top Navigation Bar -->
-    <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md shadow-indigo-200">
-                    <i class="fa-solid fa-gift text-lg"></i>
-                </div>
-                <span class="font-extrabold text-xl tracking-tight text-indigo-600">Radeem</span>
-            </div>
-            
-            <!-- Balances -->
-            <div class="flex items-center gap-3">
-                <!-- Diamonds -->
-                <div class="flex items-center gap-1.5 bg-cyan-50 border border-cyan-100 px-3 py-1.5 rounded-full shadow-sm">
-                    <i class="fa-solid fa-gem text-cyan-500 animate-pulse"></i>
-                    <span id="diamond-balance" class="font-bold text-cyan-700 text-sm">0</span>
-                </div>
-                <!-- Coins -->
-                <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-full shadow-sm">
-                    <i class="fa-solid fa-coins text-amber-500 animate-bounce-slow"></i>
-                    <span id="coin-balance" class="font-bold text-amber-700 text-sm">0</span>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Area (Mobile-first container) -->
-    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 pb-24">
-        
-        <!-- Tab Content: Earn -->
-        <section id="tab-earn" class="tab-content space-y-6">
-            <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
-                    <i class="fa-solid fa-box-open"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-1">Unlock Mystery Boxes!</h2>
-                <p class="text-indigo-100 text-xs mb-4">Watch ads to get Diamonds, then open boxes to claim massive Coin rewards!</p>
-                <div class="flex gap-4 text-xs bg-white/10 backdrop-blur-md p-3 rounded-2xl">
-                    <div>
-                        <span class="block text-indigo-200 font-medium">Redeem Rate</span>
-                        <span class="font-bold text-sm">900 Coins = ₹10 RS</span>
-                    </div>
-                    <div class="border-l border-white/20 pl-4">
-                        <span class="block text-indigo-200 font-medium">Box Reward</span>
-                        <span class="font-bold text-sm">+190 Coins</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mystery Box Section -->
-            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-center relative overflow-hidden">
-                <div class="absolute top-3 right-3 bg-indigo-50 text-indigo-600 text-xs font-bold px-2.5 py-1 rounded-full">
-                    Cost: 19 <i class="fa-solid fa-gem text-cyan-500 ml-0.5"></i>
-                </div>
-                
-                <h3 class="text-lg font-bold text-slate-700 mb-1">Premium Mystery Box</h3>
-                <p class="text-slate-400 text-xs mb-6">Guaranteed 190 Coins inside!</p>
-
-                <!-- Box Animation Container -->
-                <div class="relative h-48 flex items-center justify-center mb-6">
-                    <div id="mystery-box-container" class="cursor-pointer transition-transform duration-300 hover:scale-105">
-                        <img id="mystery-box-img" src="https://image.pollinations.ai/prompt/a%20vibrant%203d%20mystery%20gift%20box%20with%20golden%20ribbons%20and%20sparkles%20isolated%20on%20white%20background%20mobile%20game%20style" alt="Mystery Box" class="w-40 h-40 object-contain drop-shadow-xl">
-                    </div>
-                    <!-- Sparkle effects -->
-                    <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
-                        <div class="sparkle s1"></div>
-                        <div class="sparkle s2"></div>
-                        <div class="sparkle s3"></div>
-                    </div>
-                </div>
-
-                <!-- Open Button -->
-                <button id="btn-open-box" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-indigo-200 hover:opacity-95 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-key"></i>
-                    <span>Open Box (19 Diamonds)</span>
-                </button>
-            </div>
-
-            <!-- Watch Ad Section -->
-            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex items-center justify-between gap-4">
-                <div class="flex-1">
-                    <span class="text-xs font-bold text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-full uppercase tracking-wider">Ad Reward</span>
-                    <h3 class="text-base font-bold text-slate-700 mt-2">Need Diamonds?</h3>
-                    <p class="text-slate-400 text-xs mt-0.5">Watch 1 short video ad to instantly get 19 Diamonds!</p>
-                </div>
-                <button id="btn-watch-ad" class="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-cyan-100 hover:opacity-95 transition-all active:scale-[0.98] flex flex-col items-center justify-center min-w-[100px] gap-1">
-                    <i class="fa-solid fa-circle-play text-xl"></i>
-                    <span class="text-xs">Watch Ad</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Tab Content: Redeem -->
-        <section id="tab-redeem" class="tab-content hidden space-y-6">
-            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
-                <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 text-lg"></i>
-                <div>
-                    <h4 class="font-bold text-amber-800 text-sm">Redemption Rules</h4>
-                    <p class="text-amber-700 text-xs mt-0.5">Every 900 coins can be redeemed for a ₹10 RS Google Play Redeem Code. Codes are generated instantly!</p>
-                </div>
-            </div>
-
-            <h3 class="font-bold text-slate-700 text-lg px-1">Available Rewards</h3>
-
-            <!-- Redeem Cards Grid -->
-            <div class="grid grid-cols-1 gap-4">
-                <!-- Card 1: 10 RS -->
-                <div class="bg-white border border-slate-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md shadow-emerald-100">
-                            <i class="fa-brands fa-google-play"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-slate-800">₹10 Google Play Code</h4>
-                            <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-coins text-amber-500"></i> 900 Coins required
-                            </p>
-                        </div>
-                    </div>
-                    <button onclick="redeemCode(10, 900)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all active:scale-95 shadow-sm">
-                        Redeem
-                    </button>
-                </div>
-
-                <!-- Card 2: 50 RS -->
-                <div class="bg-white border border-slate-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md shadow-indigo-100">
-                            <i class="fa-brands fa-google-play"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-slate-800">₹50 Google Play Code</h4>
-                            <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-coins text-amber-500"></i> 4,500 Coins required
-                            </p>
-                        </div>
-                    </div>
-                    <button onclick="redeemCode(50, 4500)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all active:scale-95 shadow-sm">
-                        Redeem
-                    </button>
-                </div>
-
-                <!-- Card 3: 100 RS -->
-                <div class="bg-white border border-slate-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md shadow-pink-100">
-                            <i class="fa-brands fa-google-play"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-slate-800">₹100 Google Play Code</h4>
-                            <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-coins text-amber-500"></i> 9,000 Coins required
-                            </p>
-                        </div>
-                    </div>
-                    <button onclick="redeemCode(100, 9000)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all active:scale-95 shadow-sm">
-                        Redeem
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Tab Content: History -->
-        <section id="tab-history" class="tab-content hidden space-y-4">
-            <h3 class="font-bold text-slate-700 text-lg px-1">My Redeemed Codes</h3>
-            
-            <div id="history-list" class="space-y-3">
-                <!-- Dynamic items will be injected here -->
-                <div class="text-center py-12 text-slate-400">
-                    <i class="fa-solid fa-receipt text-4xl mb-3 opacity-50"></i>
-                    <p class="text-sm">No codes redeemed yet. Start earning!</p>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-lg z-40">
-        <div class="max-w-md mx-auto flex justify-around py-2">
-            <button onclick="switchTab('earn')" id="nav-earn" class="nav-btn flex flex-col items-center gap-1 py-1 px-4 text-indigo-600 font-semibold">
-                <i class="fa-solid fa-gamepad text-xl"></i>
-                <span class="text-[10px]">Earn</span>
-            </button>
-            <button onclick="switchTab('redeem')" id="nav-redeem" class="nav-btn flex flex-col items-center gap-1 py-1 px-4 text-slate-400 hover:text-indigo-500 transition-colors">
-                <i class="fa-solid fa-store text-xl"></i>
-                <span class="text-[10px]">Redeem</span>
-            </button>
-            <button onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center gap-1 py-1 px-4 text-slate-400 hover:text-indigo-500 transition-colors">
-                <i class="fa-solid fa-clock-rotate-left text-xl"></i>
-                <span class="text-[10px]">History</span>
-            </button>
-        </div>
-    </nav>
-
-    <!-- MODAL: Simulated Video Ad -->
-    <div id="ad-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl relative">
-            <!-- Ad Header -->
-            <div class="bg-slate-100 px-4 py-3 flex justify-between items-center border-b border-slate-200">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sponsored Ad</span>
-                <div id="ad-timer" class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                    5s
-                </div>
-            </div>
-            <!-- Ad Video/Image Area -->
-            <div class="relative aspect-video bg-black flex items-center justify-center">
-                <img src="https://image.pollinations.ai/prompt/colorful%20mobile%20game%20advertisement%20with%20gems%20and%20chests%20exciting%20gameplay" alt="Ad Content" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <i class="fa-solid fa-circle-play text-white text-5xl opacity-80 animate-ping absolute"></i>
-                    <i class="fa-solid fa-circle-play text-white text-5xl relative z-10"></i>
-                </div>
-            </div>
-            <!-- Ad Footer -->
-            <div class="p-5 text-center">
-                <h4 class="font-bold text-slate-800 text-base">Super Jewel Quest!</h4>
-                <p class="text-slate-500 text-xs mt-1 mb-4">Play now and win real rewards daily.</p>
-                <button disabled id="btn-close-ad" class="w-full bg-slate-200 text-slate-400 font-bold py-3 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                    <span>Wait to Skip</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-            </div>
-        </div>
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <span>🎁</span> Radeem App
+    </a>
+    <div class="nav-links">
+      <a href="login.html" class="nav-link">Login</a>
+      <a href="register.html" class="nav-link">Register</a>
     </div>
+  </nav>
 
-    <!-- MODAL: Reward Reveal / Box Open -->
-    <div id="reward-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-xs w-full p-6 text-center shadow-2xl transform scale-95 transition-transform duration-300" id="reward-card">
-            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                <i class="fa-solid fa-coins text-amber-500 text-4xl"></i>
-            </div>
-            <h3 class="text-2xl font-extrabold text-slate-800">Congratulations!</h3>
-            <p class="text-slate-500 text-sm mt-1">You opened the Mystery Box and found:</p>
-            <div class="my-5 inline-block bg-amber-50 border border-amber-200 px-6 py-3 rounded-2xl">
-                <span class="text-3xl font-black text-amber-600">+190</span>
-                <span class="text-sm font-bold text-amber-700 ml-1">Coins</span>
-            </div>
-            <button onclick="closeRewardModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all">
-                Awesome!
-            </button>
-        </div>
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+    <div class="auth-container" style="max-width: 600px;">
+      <div class="auth-header">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🎁</div>
+        <h1>Earn Free Redeem Codes</h1>
+        <p>Watch ads to earn diamonds, open mystery boxes to get coins, and redeem them for real Google Play Redeem Codes!</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <a href="register.html" class="btn btn-primary">Get Started Now</a>
+        <a href="login.html" class="btn btn-google">Already have an account? Log In</a>
+      </div>
     </div>
+  </div>
 
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300">
-        <i class="fa-solid fa-circle-info text-indigo-400"></i>
-        <span id="toast-msg">Notification message</span>
-    </div>
-
-    <!-- Confetti Canvas Container -->
-    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
-
-    <script src="script.js"></script>
+  <script type="module">
+    import { checkAuthState } from './auth.js';
+    checkAuthState((user) => {
+      if (user) {
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
 </body>
 </html>
