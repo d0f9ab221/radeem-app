@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redeem - Radeem App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="app-body">
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="header-title-only">
+            <h2>Redeem Rewards</h2>
+        </div>
+        <div class="balances-container">
+            <div class="balance-pill coin-pill">
+                <span class="pill-icon">🪙</span>
+                <span id="header-coins">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+        <div class="redeem-hero">
+            <img src="https://image.pollinations.ai/prompt/3d%20rupee%20symbol%20with%20glowing%20gift%20cards%20and%20cash" alt="Redeem">
+            <h2>Convert Coins to Cash</h2>
+            <p>900 Coins = 10 Rupees Redeem Code</p>
+        </div>
+
+        <div id="redeem-alert" class="alert hidden"></div>
+
+        <!-- Redeem Form -->
+        <div class="redeem-card">
+            <h3>Request Redeem Code</h3>
+            <form id="redeem-form">
+                <div class="form-group">
+                    <label for="payment-details">UPI ID / Paytm Number / Email</label>
+                    <input type="text" id="payment-details" placeholder="Enter details to receive code" required>
+                </div>
+                <button type="submit" id="btn-submit-redeem" class="btn btn-primary btn-block">
+                    Redeem 10 Rupees (900 Coins)
+                </button>
+            </form>
+        </div>
+
+        <!-- Redeem History -->
+        <div class="history-section">
+            <h3>Redeem History</h3>
+            <div class="history-list" id="history-list">
+                <div class="empty-history">No redeem requests yet.</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item" onclick="window.location.href='dashboard.html'">
+            <i data-lucide="home"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=earn'">
+            <i data-lucide="tv"></i>
+            <span>Earn</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=box'">
+            <i data-lucide="gift"></i>
+            <span>Box</span>
+        </button>
+        <button class="nav-item active">
+            <i data-lucide="award"></i>
+            <span>Redeem</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='profile.html'">
+            <i data-lucide="user"></i>
+            <span>Profile</span>
+        </button>
+    </nav>
+
+    <script src="firebase.js"></script>
+    <script src="database.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let userCoins = 0;
+
+        // Sync user balance
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            syncUserData(user.uid, (data) => {
+                if (data) {
+                    userCoins = data.coins || 0;
+                    document.getElementById('header-coins').innerText = userCoins;
+                }
+            });
+
+            // Load Redeem History
+            loadRedeemHistory(user.uid);
+        });
+
+        // Handle Redeem Form Submission
+        document.getElementById('redeem-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const details = document.getElementById('payment-details').value;
+            const btn = document.getElementById('btn-submit-redeem');
+            const alertBox = document.getElementById('redeem-alert');
+
+            if (userCoins < 900) {
+                showAlert('Insufficient coins! You need at least 900 coins.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Processing...';
+
+            try {
+                const user = firebase.auth().currentUser;
+                await createRedeemRequest(user.uid, user.email, details);
+                showAlert('Redeem request submitted successfully!', 'success');
+                document.getElementById('payment-details').value = '';
+            } catch (error) {
+                showAlert(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Redeem 10 Rupees (900 Coins)';
+            }
+        });
+
+        function showAlert(msg, type) {
+            const alertBox = document.getElementById('redeem-alert');
+            alertBox.innerText = msg;
+            alertBox.className = `alert ${type}`;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => alertBox.classList.add('hidden'), 4000);
+        }
+
+        function loadRedeemHistory(uid) {
+            const historyList = document.getElementById('history-list');
+            firebase.database().ref('redeemRequests').orderByChild('uid').equalTo(uid)
+                .on('value', (snapshot) => {
+                    if (!snapshot.exists()) {
+                        historyList.innerHTML = '<div class="empty-history">No redeem requests yet.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    const data = snapshot.val();
+                    // Sort by date descending
+                    const sortedKeys = Object.keys(data).sort((a, b) => data[b].createdAt - data[a].createdAt);
+                    
+                    sortedKeys.forEach(key => {
+                        const req = data[key];
+                        const date = new Date(req.createdAt).toLocaleDateString();
+                        const statusClass = req.status === 'pending' ? 'status-pending' : 'status-approved';
+                        html += `
+                            <div class="history-item">
+                                <div class="history-info">
+                                    <span class="history-amount">₹${req.amount} Redeem Code</span>
+                                    <span class="history-date">${date} • Used ${req.coinsUsed} Coins</span>
+                                </div>
+                                <span class="status-badge ${statusClass}">${req.status.toUpperCase()}</span>
+                            </div>
+                        `;
+                    });
+                    historyList.innerHTML = html;
+                });
+        }
+    </script>
+</body>
+</html>

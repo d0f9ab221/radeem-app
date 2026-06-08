@@ -1,128 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Profile - Radeem App</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Radeem App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-
-  <!-- Desktop Navbar -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
-      <span>🎁</span> Radeem App
-    </a>
-    <div class="nav-links">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="profile.html" class="nav-link active">Profile</a>
-      <button id="logout-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
-    </div>
-  </nav>
-
-  <div class="dashboard-container" style="margin-bottom: 6rem;">
-    <div class="profile-card">
-      <div class="profile-avatar" id="profile-avatar">U</div>
-      <h2 id="profile-username" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.25rem;">Loading...</h2>
-      <p id="profile-email" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">loading...</p>
-
-      <div style="display: flex; justify-content: space-around; background: #f8fafc; padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; border: 1px solid var(--border);">
-        <div>
-          <div style="font-size: 1.5rem;">🪙</div>
-          <div style="font-weight: 800; font-size: 1.3rem; color: var(--text-main);" id="profile-coins">0</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Coins</div>
+<body class="app-body">
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="header-title-only">
+            <h2>My Profile</h2>
         </div>
-        <div style="width: 1px; background: var(--border);"></div>
-        <div>
-          <div style="font-size: 1.5rem;">💎</div>
-          <div style="font-weight: 800; font-size: 1.3rem; color: var(--text-main);" id="profile-diamonds">0</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Diamonds</div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-content profile-content">
+        <div class="profile-card-main">
+            <div class="profile-avatar-container">
+                <img id="profile-avatar" src="https://image.pollinations.ai/prompt/minimalist%20cute%203d%20avatar%20boy%20smiling" alt="Avatar" class="profile-avatar">
+                <button class="edit-avatar-btn" id="edit-avatar-btn">
+                    <i data-lucide="camera"></i>
+                </button>
+            </div>
+            <h3 id="profile-username">Loading...</h3>
+            <p id="profile-email" class="profile-email">Loading...</p>
+            <span class="join-date" id="profile-join-date">Joined: --/--/----</span>
         </div>
-      </div>
 
-      <div class="redeem-history">
-        <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span>🎟️</span> Redeem History</h3>
-        <div id="history-list">
-          <p style="color: var(--text-muted); text-align: center; padding: 2rem 0; font-size: 0.9rem;">No redeemed codes yet.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile Bottom Navigation -->
-  <div class="bottom-nav">
-    <a href="dashboard.html" class="bottom-nav-item">
-      <span class="bottom-nav-icon">⚡</span>
-      <span class="bottom-nav-label">Earn</span>
-    </a>
-    <a href="profile.html" class="bottom-nav-item active">
-      <span class="bottom-nav-icon">👤</span>
-      <span class="bottom-nav-label">Profile</span>
-    </a>
-    <a href="#" id="mobile-logout-btn" class="bottom-nav-item">
-      <span class="bottom-nav-icon">🚪</span>
-      <span class="bottom-nav-label">Logout</span>
-    </a>
-  </div>
-
-  <script type="module">
-    import { checkAuthState, logoutUser } from './auth.js';
-    import { getUserData } from './database.js';
-
-    const logoutBtn = document.getElementById('logout-btn');
-    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
-    const profileAvatar = document.getElementById('profile-avatar');
-    const profileUsername = document.getElementById('profile-username');
-    const profileEmail = document.getElementById('profile-email');
-    const profileCoins = document.getElementById('profile-coins');
-    const profileDiamonds = document.getElementById('profile-diamonds');
-    const historyList = document.getElementById('history-list');
-
-    checkAuthState(async (user) => {
-      if (!user) {
-        window.location.href = 'index.html';
-      } else {
-        const data = await getUserData(user.uid);
-        if (data) {
-          profileUsername.textContent = data.username || 'User';
-          profileEmail.textContent = data.email;
-          profileCoins.textContent = data.coins || 0;
-          profileDiamonds.textContent = data.diamonds || 0;
-          profileAvatar.textContent = (data.username || 'U').charAt(0).toUpperCase();
-
-          // Load History
-          if (data.redeemedCodes) {
-            historyList.innerHTML = '';
-            Object.values(data.redeemedCodes).reverse().forEach(item => {
-              const div = document.createElement('div');
-              div.className = 'history-item';
-              div.innerHTML = `
-                <div>
-                  <div style="font-weight: 700; font-size: 0.95rem;">${item.amount} Code</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(item.date).toLocaleDateString()}</div>
+        <!-- Edit Profile Form -->
+        <div class="profile-section-card">
+            <h3>Edit Profile</h3>
+            <div id="profile-alert" class="alert hidden"></div>
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label for="edit-username">Username</label>
+                    <input type="text" id="edit-username" placeholder="Enter new username" required>
                 </div>
-                <div class="code-display">${item.code}</div>
-              `;
-              historyList.appendChild(div); 
-            });
-          }
-        }
-      }
-    });
+                <button type="submit" id="btn-save-profile" class="btn btn-primary btn-block">Save Changes</button>
+            </form>
+        </div>
 
-    async function handleLogout() {
-      await logoutUser();
-      window.location.href = 'index.html';
-    }
-    logoutBtn.addEventListener('click', handleLogout);
-    mobileLogoutBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleLogout();
-    });
-  </script>
+        <!-- Stats Summary -->
+        <div class="profile-section-card">
+            <h3>Your Statistics</h3>
+            <div class="profile-stats-grid">
+                <div class="p-stat-item">
+                    <span class="p-stat-icon">🪙</span>
+                    <span class="p-stat-val" id="p-coins">0</span>
+                    <span class="p-stat-lbl">Coins</span>
+                </div>
+                <div class="p-stat-item">
+                    <span class="p-stat-icon">💎</span>
+                    <span class="p-stat-val" id="p-diamonds">0</span>
+                    <span class="p-stat-lbl">Diamonds</span>
+                </div>
+                <div class="p-stat-item">
+                    <span class="p-stat-icon">🎁</span>
+                    <span class="p-stat-val" id="p-redeems">0</span>
+                    <span class="p-stat-lbl">Redeems</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logout Button -->
+        <div class="logout-container">
+            <button id="btn-logout" class="btn btn-danger btn-block">
+                <i data-lucide="log-out"></i> Logout Account
+            </button>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item" onclick="window.location.href='dashboard.html'">
+            <i data-lucide="home"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=earn'">
+            <i data-lucide="tv"></i>
+            <span>Earn</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='dashboard.html?tab=box'">
+            <i data-lucide="gift"></i>
+            <span>Box</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='redeem.html'">
+            <i data-lucide="award"></i>
+            <span>Redeem</span>
+        </button>
+        <button class="nav-item active">
+            <i data-lucide="user"></i>
+            <span>Profile</span>
+        </button>
+    </nav>
+
+    <script src="firebase.js"></script>
+    <script src="database.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Load Profile Data
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Sync user data in real-time
+            syncUserData(user.uid, (data) => {
+                if (data) {
+                    document.getElementById('profile-username').innerText = data.username || 'User';
+                    document.getElementById('profile-email').innerText = data.email;
+                    document.getElementById('edit-username').value = data.username || '';
+                    document.getElementById('p-coins').innerText = data.coins || 0;
+                    document.getElementById('p-diamonds').innerText = data.diamonds || 0;
+                    
+                    if (data.createdAt) {
+                        const date = new Date(data.createdAt);
+                        document.getElementById('profile-join-date').innerText = `Joined: ${date.toLocaleDateString()}`;
+                    }
+                }
+            });
+
+            // Get total redeems count
+            firebase.database().ref(`redeemRequests`).orderByChild('uid').equalTo(user.uid)
+                .on('value', (snapshot) => {
+                    const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+                    document.getElementById('p-redeems').innerText = count;
+                });
+        });
+
+        // Handle Profile Edit Form
+        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newUsername = document.getElementById('edit-username').value;
+            const btn = document.getElementById('btn-save-profile');
+            const alertBox = document.getElementById('profile-alert');
+            
+            btn.disabled = true;
+            btn.innerText = 'Saving...';
+            
+            try {
+                const user = firebase.auth().currentUser;
+                await firebase.database().ref(`users/${user.uid}`).update({
+                    username: newUsername
+                });
+                alertBox.innerText = 'Profile updated successfully!';
+                alertBox.className = 'alert success';
+                alertBox.classList.remove('hidden');
+            } catch (error) {
+                alertBox.innerText = error.message;
+                alertBox.className = 'alert error';
+                alertBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Save Changes';
+                setTimeout(() => alertBox.classList.add('hidden'), 3000);
+            }
+        });
+
+        // Handle Logout
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            await logoutUser();
+        });
+    </script>
 </body>
 </html>

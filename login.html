@@ -1,11 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=index.html">
-  <title>Redirecting...</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Radeem App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body>
-  <p>Redirecting to <a href="index.html">Login</a>...</p>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Login to continue earning rewards</p>
+        </div>
+
+        <div id="alert-box" class="alert hidden"></div>
+
+        <form id="login-form" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <div class="forgot-link-container">
+                <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
+            </div>
+            <button type="submit" id="btn-login" class="btn btn-primary btn-block">Sign In</button>
+        </form>
+
+        <div class="divider">
+            <span>OR</span>
+        </div>
+
+        <button id="btn-google" class="btn btn-google btn-block">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
+            Sign in with Google
+        </button>
+
+        <p class="auth-footer">
+            Don't have an account? <a href="register.html">Register Now</a>
+        </p>
+    </div>
+
+    <script src="firebase.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('btn-login');
+            
+            btn.disabled = true;
+            btn.innerText = 'Signing in...';
+            
+            try {
+                await signInWithEmail(email, password);
+            } catch (error) {
+                showAlert(error.message, 'error');
+                btn.disabled = false;
+                btn.innerText = 'Sign In';
+            }
+        });
+
+        document.getElementById('btn-google').addEventListener('click', async () => {
+            try {
+                await signInWithGoogle();
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        function showAlert(msg, type) {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.innerText = msg;
+            alertBox.className = `alert ${type}`;
+            alertBox.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>

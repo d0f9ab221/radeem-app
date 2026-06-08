@@ -1,140 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Login - Radeem App</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radeem App - Premium Rewards</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="auth-body">
+<body class="landing-body">
+    <div class="landing-container">
+        <div class="logo-section">
+            <div class="logo-glow"></div>
+            <img src="https://image.pollinations.ai/prompt/premium%20gold%20and%20diamond%20reward%20gift%20box%203d%20render%20isolated" alt="Radeem Logo" class="landing-logo">
+            <h1 class="app-title">Radeem</h1>
+            <p class="app-subtitle">Earn Rewards, Open Mystery Boxes & Redeem Cash</p>
+        </div>
 
-  <nav class="navbar">
-    <a href="index.html" class="nav-logo">
-      <span>🎁</span> Radeem App
-    </a>
-    <div class="nav-links">
-      <a href="register.html" class="nav-link">Register</a>
+        <div class="features-carousel">
+            <div class="feature-card">
+                <div class="feature-icon">💎</div>
+                <h3>Watch & Earn</h3>
+                <p>Get instant diamonds for watching premium short ads.</p>
+            </div>
+        </div>
+
+        <div class="landing-actions">
+            <a href="login.html" class="btn btn-primary btn-block">Get Started</a>
+            <a href="register.html" class="btn btn-secondary btn-block">Create Account</a>
+        </div>
     </div>
-  </nav>
 
-  <div class="auth-wrapper">
-    <div class="auth-container">
-      <div class="auth-header">
-        <div class="auth-logo-badge">🎁</div>
-        <h1>Welcome Back</h1>
-        <p>Log in to continue earning rewards</p>
-      </div>
-
-      <form id="login-form">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="••••••••" required>
-        </div>
-        <div style="text-align: right; margin-bottom: 1.5rem;">
-          <a href="#" id="forgot-password-link" style="color: var(--primary); font-size: 0.85rem; font-weight: 600; text-decoration: none;">Forgot Password?</a>
-        </div>
-        <button type="submit" class="btn btn-primary">Log In</button>
-      </form>
-
-      <button id="guest-login-btn" class="btn btn-guest">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        Play as Guest
-      </button>
-
-      <div class="divider">or</div>
-
-      <button id="google-signin-btn" class="btn btn-google">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
-        Sign in with Google
-      </button>
-
-      <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
-        Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 700; text-decoration: none;">Register</a>
-      </p>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="toast" class="toast"></div>
-
-  <script type="module">
-    import { loginUser, loginWithGoogle, loginAsGuest, resetPassword, checkAuthState } from './auth.js';
-
-    const loginForm = document.getElementById('login-form');
-    const googleBtn = document.getElementById('google-signin-btn');
-    const guestBtn = document.getElementById('guest-login-btn');
-    const forgotLink = document.getElementById('forgot-password-link');
-    const toast = document.getElementById('toast');
-
-    function showToast(message, isError = false) {
-      toast.textContent = message;
-      toast.style.borderLeft = isError ? '4px solid var(--danger)' : '4px solid var(--success)';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    checkAuthState((user) => {
-      if (user) {
-        window.location.href = 'dashboard.html';
-      }
-    });
-
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      const res = await loginUser(email, password);
-      if (res.success) {
-        showToast('Login successful! Redirecting...');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else {
-        showToast(res.error, true);
-      }
-    });
-
-    googleBtn.addEventListener('click', async () => {
-      const res = await loginWithGoogle();
-      if (res.success) {
-        showToast('Google Login successful!');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else {
-        showToast(res.error, true);
-      }
-    });
-
-    guestBtn.addEventListener('click', async () => {
-      const res = await loginAsGuest();
-      if (res.success) {
-        showToast('Logged in as Guest! Redirecting...');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else {
-        showToast(res.error, true);
-      }
-    });
-
-    forgotLink.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      if (!email) {
-        showToast('Please enter your email address first.', true);
-        return;
-      }
-      const res = await resetPassword(email);
-      if (res.success) {
-        showToast('Password reset email sent!');
-      } else {
-        showToast(res.error, true);
-      }
-    });
-  </script>
+    <script src="firebase.js"></script>
+    <script>
+        // Auto redirect if already logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
 </body>
 </html>

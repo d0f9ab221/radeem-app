@@ -1,126 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Register - Radeem App</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Radeem App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body class="auth-body">
-
-  <nav class="navbar">
-    <a href="index.html" class="nav-logo">
-      <span>🎁</span> Radeem App
-    </a>
-    <div class="nav-links">
-      <a href="index.html" class="nav-link">Login</a>
-    </div>
-  </nav>
-
-  <div class="auth-wrapper">
     <div class="auth-container">
-      <div class="auth-header">
-        <div class="auth-logo-badge">✨</div>
-        <h1>Create Account</h1>
-        <p>Start earning free redeem codes today</p>
-      </div>
-
-      <form id="register-form">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" class="form-control" placeholder="johndoe" required>
+        <div class="auth-header">
+            <h2>Create Account</h2>
+            <p>Join Radeem and start earning today</p>
         </div>
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+
+        <div id="alert-box" class="alert hidden"></div>
+
+        <form id="register-form" class="auth-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Create a strong password" required>
+            </div>
+            <button type="submit" id="btn-register" class="btn btn-primary btn-block">Sign Up</button>
+        </form>
+
+        <div class="divider">
+            <span>OR</span>
         </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Register</button>
-      </form>
 
-      <button id="guest-login-btn" class="btn btn-guest">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        Play as Guest
-      </button>
+        <button id="btn-google" class="btn btn-google btn-block">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
+            Sign up with Google
+        </button>
 
-      <div class="divider">or</div>
-
-      <button id="google-signin-btn" class="btn btn-google">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
-        Sign up with Google
-      </button>
-
-      <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
-        Already have an account? <a href="index.html" style="color: var(--primary); font-weight: 700; text-decoration: none;">Log In</a>
-      </p>
+        <p class="auth-footer">
+            Already have an account? <a href="login.html">Login</a>
+        </p>
     </div>
-  </div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast"></div>
+    <script src="firebase.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('btn-register');
+            
+            btn.disabled = true;
+            btn.innerText = 'Creating Account...';
+            
+            try {
+                await signUpWithEmail(email, password, username);
+            } catch (error) {
+                showAlert(error.message, 'error');
+                btn.disabled = false;
+                btn.innerText = 'Sign Up';
+            }
+        });
 
-  <script type="module">
-    import { registerUser, loginWithGoogle, loginAsGuest, checkAuthState } from './auth.js';
+        document.getElementById('btn-google').addEventListener('click', async () => {
+            try {
+                await signInWithGoogle();
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
 
-    const registerForm = document.getElementById('register-form');
-    const googleBtn = document.getElementById('google-signin-btn');
-    const guestBtn = document.getElementById('guest-login-btn');
-    const toast = document.getElementById('toast');
-
-    function showToast(message, isError = false) {
-      toast.textContent = message;
-      toast.style.borderLeft = isError ? '4px solid var(--danger)' : '4px solid var(--success)';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    checkAuthState((user) => {
-      if (user) {
-        window.location.href = 'dashboard.html';
-      }
-    });
-
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      const res = await registerUser(email, password, username);
-      if (res.success) {
-        showToast('Registration successful! Redirecting...');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else { 
-        showToast(res.error, true);
-      }
-    });
-
-    googleBtn.addEventListener('click', async () => {
-      const res = await loginWithGoogle();
-      if (res.success) {
-        showToast('Google Registration successful!');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else {
-        showToast(res.error, true);
-      }
-    });
-
-    guestBtn.addEventListener('click', async () => {
-      const res = await loginAsGuest();
-      if (res.success) {
-        showToast('Logged in as Guest! Redirecting...');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      } else {
-        showToast(res.error, true);
-      }
-    });
-  </script>
+        function showAlert(msg, type) {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.innerText = msg;
+            alertBox.className = `alert ${type}`;
+            alertBox.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
